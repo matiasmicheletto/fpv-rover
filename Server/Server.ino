@@ -1,56 +1,135 @@
 #include <ESP8266WiFi.h>
 #include <WebSocketsServer.h>
+#include <Ticker.h>
 
+// Numeros de pines
+#define FL_PIN 5 // Avance izq
+#define FR_PIN 4 // Avance der
+#define BL_PIN 0 // Retroceso izq
+#define BR_PIN 2 // Retroceso der
+
+// Parametros
+#define DEBUG_MODE true // Modo Debuggeo
+#define BAUDRATE 115200 // Velocidad serie
+#define T_PERIOD 100 // Periodo de actualizacion de salidas (ms)
+#define INERT 4.0 // Factor de inercia en aceleracion
+#define MAX_WATCHDOG 10 // Maxima cantidad de loops antes de poner los setpoints en 0
+
+// Websocket puerto 81
+WebSocketsServer webSocket = WebSocketsServer(81);
+
+// Funciones periodicas
+Ticker ticker;
+
+// Autenticacion red
 const char* ssid = "B93615";
 const char* password = "101344997";
 
-WebSocketsServer webSocket = WebSocketsServer(81);
+int spL = 1023, spR = 1023; // Setpoints izq y der respectivamente (0..2046)
+int pwrL = 0, pwrR = 0; // Salidas izq y der respectivamente (0..2046)
+
+int watchdog = 0; // Contador de loops sin actualizacion de setpoint
+
+void updateOutputs(){ 
+  // Calcular y actualizar salidas
+  
+  watchdog++; // Contar loop
+  if(watchdog >= MAX_WATCHDOG){ // Frenar en ausencia de comandos
+    spL = 1023;
+    spR = 1023;
+  }
+
+  // Incremento-decremento gradual
+  pwrL = (int) (((float)spL + INERT*(float)pwrL) / (INERT+1));
+  pwrR = (int) (((float)spR + INERT*(float)pwrR) / (INERT+1));
+
+  // Actualizar salidas
+  if(pwrL >= 1023){
+    analogWrite(FL_PIN,pwrL-1023);
+    analogWrite(BL_PIN,0);
+  }else{
+    analogWrite(FL_PIN,0);
+    analogWrite(BL_PIN,1023-pwrL);
+  }
+
+  if(pwrR >= 1023){
+    analogWrite(FR_PIN,pwrR-1023);
+    analogWrite(BR_PIN,0);
+  }else{
+    analogWrite(FR_PIN,0);
+    analogWrite(BR_PIN,1023-pwrR);
+  }
+
+  #ifdef DEBUG_MODE
+    Serial.printf("Izq.: %d, Der.: %d\n", pwrL, pwrR);
+  #endif
+}
 
 void webSocketEvent(uint8_t client_num, WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_CONNECTED: {
       IPAddress ip = webSocket.remoteIP(client_num);
-      Serial.printf("[%u] Conectado a la URL: %d.%d.%d.%d - %s\n", client_num, ip[0], ip[1], ip[2], ip[3], payload); 
+      #ifdef DEBUG_MODE
+        Serial.printf("[%u] Conectado a la URL: %d.%d.%d.%d - %s\n", client_num, ip[0], ip[1], ip[2], ip[3], payload); 
+      #endif
       break;
     }
     case WStype_DISCONNECTED:{
-      Serial.printf("[%u] Desconectado!\n", client_num);
+      #ifdef DEBUG_MODE
+        Serial.printf("[%u] Desconectado!\n", client_num);
+      #endif
       break;
     }
     case WStype_TEXT:{
-      //Serial.printf("Número de conexión: %u  -  Carácteres recibidos: %s\n  ", client_num, payload);
+      #ifdef DEBUG_MODE
+        Serial.printf("Número de conexión: %u  -  Carácteres recibidos: %s\n  ", client_num, payload);
+      #endif
       webSocket.sendTXT(client_num, payload); // Reenviar el mensaje como ack
-      //char data[6]; data = (char*)payload; // Conversión de los carácteres recibidos a cadena de texto
-      char val1[3] = {(char)payload[0],(char)payload[1],(char)payload[2]};
-      char val2[3] = {(char)payload[3],(char)payload[4],(char)payload[5]};
-      // Configurar salidas
-      setOutputs(atoi(val1), atoi(val2));
+      // El payload debe tener 8 digitos solamente (controlar?) y van de 0 a 2047
+      char val1[4] = {(char)payload[0],(char)payload[1],(char)payload[2],(char)payload[3]};
+      char val2[4] = {(char)payload[4],(char)payload[5],(char)payload[6],(char)payload[7]};
+      // Convertir valores a enteros y setear setpoints
+      spL = atoi(val1);
+      spR = atoi(val2);
+      watchdog = 0; // Reiniciar watchdog
+      #ifdef DEBUG_MODE
+        Serial.printf("Motor 1: %d, Motor 2: %d\n", spL, spR);
+      #endif
       break;
     }
   }
 }
 
-void setOutputs(int val1, int val2) {
-  Serial.printf("Motor 1: %d, Motor 2: %d\n",val1, val2);
-}
-
 void setup() {
-  Serial.begin(115200); // Iniciar comunicacion con PC
+  // Inicializar GPIO
+  pinMode(FL_PIN,OUTPUT);
+  pinMode(FR_PIN,OUTPUT);
+  pinMode(BL_PIN,OUTPUT);
+  pinMode(BR_PIN,OUTPUT);
 
-  WiFi.begin(ssid, password); // Conectarse a la red WiFi 
- 
+  #ifdef DEBUG_MODE
+    Serial.begin(BAUDRATE); // Iniciar comunicacion con PC
+  #endif
+  
+  // Conectarse a la red WiFi
+  WiFi.begin(ssid, password);  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.printf(".");
+    #ifdef DEBUG_MODE
+      Serial.printf(".");
+    #endif
   }
-
-  Serial.printf("\nWiFi conectado\n");
-  Serial.print("Esta es mi IP: http://");
-  Serial.print(WiFi.localIP()); 
-  Serial.println("/");
+  #ifdef DEBUG_MODE
+    Serial.printf("\nWiFi conectado\n");
+    Serial.print("IP: http://");
+    Serial.print(WiFi.localIP()); 
+    Serial.println("/");
+  #endif
  
   webSocket.begin(); // Iniciar WebSocket Server
   webSocket.onEvent(webSocketEvent); // Habilitar evento
+
+  ticker.attach_ms(T_PERIOD, updateOutputs);
 }
 
 void loop() {

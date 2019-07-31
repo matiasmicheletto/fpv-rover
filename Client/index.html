@@ -9,17 +9,20 @@
 <body>
   <h1>Control de sliders con WebSocket</h1>
   
-  <input type='range' min='0' max='100' value='40' id='range1' oninput='updateVal1()'>
-  <input type='range' min='0' max='100' value='27' id='range2' oninput='updateVal2()'>
+  <input type='range' min='0' max='2046' value='490' id='range1' oninput='updateVal1()'>
+  <input type='range' min='0' max='2046' value='670' id='range2' oninput='updateVal2()'>
   
   <p id='valores'></p>
   
   <script>
+    // Valores de los sliders
     var x = document.getElementById('range1').value;
     var y = document.getElementById('range2').value;
-    
+
+    // Iniciar websocket
     var socket = new WebSocket('ws://192.168.0.149:81/', ['arduino']);
 
+    // Callbacks de websocket
     socket.onopen = function () {
       console.log("Conexión establecida");
     };
@@ -37,6 +40,7 @@
       console.log(error);
     };
 
+    // Callbacks de los sliders
     function updateVal1() {
       x = document.getElementById('range1').value;
       document.getElementById('valores').innerHTML = 'Valores: ' + x + ', ' + y;
@@ -49,8 +53,11 @@
       sendValues();
     }
 
+    // Enviar datos al server (poner dentro de un interval?)
     function sendValues() {
       var sendx = x; var sendy = y;
+      if(x < 1000) sendx = '0'+sendx;
+      if(y < 1000) sendy = '0'+sendy;
       if(x < 100) sendx = '0'+sendx;
       if(y < 100) sendy = '0'+sendy;
       if(x < 10) sendx = '0'+sendx;
