@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset=utf-8>
+  <title>WebSocket ESP8266</title>
+</head>
+
+<body>
+  <h1>Control de sliders con WebSocket</h1>
+  
+  <input type='range' min='0' max='100' value='40' id='range1' oninput='updateVal1()'>
+  <input type='range' min='0' max='100' value='27' id='range2' oninput='updateVal2()'>
+  
+  <p id='valores'></p>
+  
+  <script>
+    var x = document.getElementById('range1').value;
+    var y = document.getElementById('range2').value;
+    
+    var socket = new WebSocket('ws://192.168.0.149:81/', ['arduino']);
+
+    socket.onopen = function () {
+      console.log("Conexión establecida");
+    };
+
+    socket.onclose = function() {
+      console.log("Conexión cerrada");
+    };
+
+    socket.onmessage = function (event) {
+      console.log('Servidor (recibe): ', event.data);
+    };
+
+    socket.onerror = function (error) {
+      console.log('WebSocket Error');
+      console.log(error);
+    };
+
+    function updateVal1() {
+      x = document.getElementById('range1').value;
+      document.getElementById('valores').innerHTML = 'Valores: ' + x + ', ' + y;
+      sendValues();
+    }
+
+    function updateVal2() {
+      y = document.getElementById('range2').value;
+      document.getElementById('valores').innerHTML = 'Valores: ' + x + ', ' + y;
+      sendValues();
+    }
+
+    function sendValues() {
+      var sendx = x; var sendy = y;
+      if(x < 100) sendx = '0'+sendx;
+      if(y < 100) sendy = '0'+sendy;
+      if(x < 10) sendx = '0'+sendx;
+      if(y < 10) sendy = '0'+sendy;
+      console.log('Cliente (envía): '+sendx+sendy);
+      socket.send(sendx+sendy);
+    }
+  </script>
+</body>
+
+</html>
