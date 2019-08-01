@@ -9,8 +9,8 @@
 
 <body>
   <div class="media-container">
-    <object class="video" type="text/html" data="http://192.168.0.57:8080/video"></object>
-    <object class="audio" type="text/html" data="http://192.168.0.57:8080/audio.opus"></object>
+    <img id="video" class="video" src="http://192.168.0.57:8080/video"/>
+    <object id="audio" class="audio" type="text/html" data="http://192.168.0.57:8080/audio.opus"></object>
   </div>
   <div class="controls">
     <form id="IP_inputs" name="myform" action="" method="GET">
@@ -23,11 +23,9 @@
       <input type="button" name="button2" value="Connect" onClick="connectWSS(this.form)">
     </form>
     
-    <input type='range' min='0' max='2046' value='490' id='range1' oninput='updateVal1()'>
-    <input type='range' min='0' max='2046' value='670' id='range2' oninput='updateVal2()'>
-    <p id='valores'></p>
+    <p id='pos'></p>
   </div>
-  <br><br>
+
   <script type="text/javascript" src="script.js"></script>
 </body>
 

@@ -31,6 +31,8 @@ int pwrL = 1023, pwrR = 1023; // Salidas izq y der respectivamente (0..2046)
 
 int watchdog = 0; // Contador de loops sin actualizacion de setpoint
 
+uint8_t client_num; // Un solo cliente por vez
+
 void updateOutputs(){ 
   // Calcular y actualizar salidas
   
@@ -64,26 +66,31 @@ void updateOutputs(){
   #ifdef VERBOSE
     Serial.printf("PL: %d, PR: %d\n", pwrL, pwrR);
   #endif
+
+  // Enviar los valores calculados como feedback  
+  char payload[8];
+  sprintf(payload, "%04d%04d", pwrL, pwrR); // Concatenar valores
+  webSocket.sendTXT(client_num, payload); // Enviar al cliente
 }
 
-void webSocketEvent(uint8_t client_num, WStype_t type, uint8_t * payload, size_t length) {
+void webSocketEvent(uint8_t client, WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_CONNECTED: {
-      IPAddress ip = webSocket.remoteIP(client_num);
+      IPAddress ip = webSocket.remoteIP(client);
       #ifdef DEBUG
-        Serial.printf("[%u] Conectado a la URL: %d.%d.%d.%d - %s\n", client_num, ip[0], ip[1], ip[2], ip[3], payload); 
+        Serial.printf("[%u] Conectado a la URL: %d.%d.%d.%d - %s\n", client, ip[0], ip[1], ip[2], ip[3], payload); 
       #endif
       break;
     }
     case WStype_DISCONNECTED:{
       #ifdef DEBUG
-        Serial.printf("[%u] Desconectado!\n", client_num);
+        Serial.printf("[%u] Desconectado!\n", client);
       #endif
       break;
     }
     case WStype_TEXT:{
-      webSocket.sendTXT(client_num, payload); // Reenviar el mensaje como ack
-      // El payload debe tener 8 digitos solamente (controlar?) y van de 0 a 2047
+      client_num = client; // Guardar el numero de cliente para enviarle los valores calculados
+      // El payload debe tener 8 digitos solamente (controlar? length==??) y van de 0 a 2046
       char val1[4] = {(char)payload[0],(char)payload[1],(char)payload[2],(char)payload[3]};
       char val2[4] = {(char)payload[4],(char)payload[5],(char)payload[6],(char)payload[7]};
       // Convertir valores a enteros y setear setpoints

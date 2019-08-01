@@ -1,7 +1,6 @@
-// Valores de los sliders
-var x = document.getElementById('range1').value;
-var y = document.getElementById('range2').value;
-var socket;
+
+var socket = null; // Objeto para instanciar WebSocketServer
+var lastSampleTime = 0; // Variable auxiliar para medir frecuencia de muestreo de pos del mouse
 
 function readUrlAV(form) { // Conectar a la camara IP
     TextVar = form.inputbox1.value;
@@ -35,29 +34,32 @@ function connectWSS(form) { // Iniciar wss
     };
 }
 
-// Callbacks de los sliders
-function updateVal1() {
-    x = document.getElementById('range1').value;
-    document.getElementById('valores').innerHTML = 'Valores: ' + x + ', ' + y;
-    sendValues();
-}
-
-function updateVal2() {
-    y = document.getElementById('range2').value;
-    document.getElementById('valores').innerHTML = 'Valores: ' + x + ', ' + y;
-    sendValues();
-}
-
-function formatStr(number, length) { // Convertir numero a string de longitud fija
-    var str = '' + number;
-    while (str.length < length) str = '0' + str;
-    return str;
-}
-
 // Enviar datos al server (poner dentro de un interval?)
-function sendValues() {
+function sendValues(x,y) {
+    
+    var formatStr = function(number, length) { // Convertir numero a string de longitud fija
+        var str = '' + number;
+        while (str.length < length) str = '0' + str;
+        return str;
+    };
+
     var sendx = formatStr(x, 4);
     var sendy = formatStr(y, 4);
-    console.log('Cliente (envía): ' + sendx + sendy);
-    socket.send(sendx + sendy);
+
+    if(socket){
+        socket.send(sendx + sendy);
+        console.log('Cliente (envía): ' + sendx + sendy);
+    }
 }
+
+var mouseMoveEvent = function(e){ // Para trackear movimiento del mouse por la pantalla
+    if(Date.now() - lastSampleTime > 100){ // Muestrear posicion del mouse a 20 Hz
+        lastSampleTime = Date.now(); // Actualizar instante de muestreo
+        var x = Math.floor(2046*e.clientX/window.innerWidth);
+        var y = Math.floor(2046*e.clientY/window.innerHeight);
+        document.getElementById('pos').innerHTML = 'Posición: ' + x + ', ' + y;
+        sendValues(x,y);
+    }
+};
+
+document.addEventListener("mousemove",mouseMoveEvent);
