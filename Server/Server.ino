@@ -9,10 +9,11 @@
 #define BR_PIN 2 // Retroceso der
 
 // Parametros
-#define DEBUG_MODE true // Modo Debuggeo
-#define BAUDRATE 115200 // Velocidad serie
+#define DEBUG true // Modo Debuggeo
+#define VERBOSE true // Mostrar texto en cada intercambio
+#define BAUDRATE 115200 // Velocidad serial
 #define T_PERIOD 100 // Periodo de actualizacion de salidas (ms)
-#define INERT 4.0 // Factor de inercia en aceleracion
+#define INERT 4 // Factor de inercia en aceleracion
 #define MAX_WATCHDOG 10 // Maxima cantidad de loops antes de poner los setpoints en 0
 
 // Websocket puerto 81
@@ -26,7 +27,7 @@ const char* ssid = "B93615";
 const char* password = "101344997";
 
 int spL = 1023, spR = 1023; // Setpoints izq y der respectivamente (0..2046)
-int pwrL = 0, pwrR = 0; // Salidas izq y der respectivamente (0..2046)
+int pwrL = 1023, pwrR = 1023; // Salidas izq y der respectivamente (0..2046)
 
 int watchdog = 0; // Contador de loops sin actualizacion de setpoint
 
@@ -40,8 +41,8 @@ void updateOutputs(){
   }
 
   // Incremento-decremento gradual
-  pwrL = (int) (((float)spL + INERT*(float)pwrL) / (INERT+1));
-  pwrR = (int) (((float)spR + INERT*(float)pwrR) / (INERT+1));
+  pwrL = (spL + INERT*pwrL) / (INERT+1);
+  pwrR = (spR + INERT*pwrR) / (INERT+1);
 
   // Actualizar salidas
   if(pwrL >= 1023){
@@ -60,8 +61,8 @@ void updateOutputs(){
     analogWrite(BR_PIN,1023-pwrR);
   }
 
-  #ifdef DEBUG_MODE
-    Serial.printf("Izq.: %d, Der.: %d\n", pwrL, pwrR);
+  #ifdef VERBOSE
+    Serial.printf("PL: %d, PR: %d\n", pwrL, pwrR);
   #endif
 }
 
@@ -69,21 +70,18 @@ void webSocketEvent(uint8_t client_num, WStype_t type, uint8_t * payload, size_t
   switch(type) {
     case WStype_CONNECTED: {
       IPAddress ip = webSocket.remoteIP(client_num);
-      #ifdef DEBUG_MODE
+      #ifdef DEBUG
         Serial.printf("[%u] Conectado a la URL: %d.%d.%d.%d - %s\n", client_num, ip[0], ip[1], ip[2], ip[3], payload); 
       #endif
       break;
     }
     case WStype_DISCONNECTED:{
-      #ifdef DEBUG_MODE
+      #ifdef DEBUG
         Serial.printf("[%u] Desconectado!\n", client_num);
       #endif
       break;
     }
     case WStype_TEXT:{
-      #ifdef DEBUG_MODE
-        Serial.printf("Número de conexión: %u  -  Carácteres recibidos: %s\n  ", client_num, payload);
-      #endif
       webSocket.sendTXT(client_num, payload); // Reenviar el mensaje como ack
       // El payload debe tener 8 digitos solamente (controlar?) y van de 0 a 2047
       char val1[4] = {(char)payload[0],(char)payload[1],(char)payload[2],(char)payload[3]};
@@ -92,8 +90,8 @@ void webSocketEvent(uint8_t client_num, WStype_t type, uint8_t * payload, size_t
       spL = atoi(val1);
       spR = atoi(val2);
       watchdog = 0; // Reiniciar watchdog
-      #ifdef DEBUG_MODE
-        Serial.printf("Motor 1: %d, Motor 2: %d\n", spL, spR);
+      #ifdef VERBOSE
+        Serial.printf("SPL: %d, SPR: %d\n", spL, spR);
       #endif
       break;
     }
@@ -107,7 +105,7 @@ void setup() {
   pinMode(BL_PIN,OUTPUT);
   pinMode(BR_PIN,OUTPUT);
 
-  #ifdef DEBUG_MODE
+  #if defined(DEBUG) || defined(VERBOSE)
     Serial.begin(BAUDRATE); // Iniciar comunicacion con PC
   #endif
   
@@ -115,11 +113,11 @@ void setup() {
   WiFi.begin(ssid, password);  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    #ifdef DEBUG_MODE
+    #ifdef DEBUG
       Serial.printf(".");
     #endif
   }
-  #ifdef DEBUG_MODE
+  #ifdef DEBUG // TODO mostrar esto en display 
     Serial.printf("\nWiFi conectado\n");
     Serial.print("IP: http://");
     Serial.print(WiFi.localIP()); 
@@ -129,9 +127,9 @@ void setup() {
   webSocket.begin(); // Iniciar WebSocket Server
   webSocket.onEvent(webSocketEvent); // Habilitar evento
 
-  ticker.attach_ms(T_PERIOD, updateOutputs);
+  ticker.attach_ms(T_PERIOD, updateOutputs); // Iniciar funcion periodica
 }
 
 void loop() {
-  webSocket.loop();
+  webSocket.loop(); // Solo chequea eventos y ejecuta el callback
 }

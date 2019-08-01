@@ -2,70 +2,33 @@
 <html>
 
 <head>
+  <link type="text/css" rel="stylesheet" href="style.css" />
   <meta charset=utf-8>
   <title>WebSocket ESP8266</title>
 </head>
 
 <body>
-  <h1>Control de sliders con WebSocket</h1>
-  
-  <input type='range' min='0' max='2046' value='490' id='range1' oninput='updateVal1()'>
-  <input type='range' min='0' max='2046' value='670' id='range2' oninput='updateVal2()'>
-  
-  <p id='valores'></p>
-  
-  <script>
-    // Valores de los sliders
-    var x = document.getElementById('range1').value;
-    var y = document.getElementById('range2').value;
-
-    // Iniciar websocket
-    var socket = new WebSocket('ws://192.168.0.149:81/', ['arduino']);
-
-    // Callbacks de websocket
-    socket.onopen = function () {
-      console.log("Conexión establecida");
-    };
-
-    socket.onclose = function() {
-      console.log("Conexión cerrada");
-    };
-
-    socket.onmessage = function (event) {
-      console.log('Servidor (recibe): ', event.data);
-    };
-
-    socket.onerror = function (error) {
-      console.log('WebSocket Error');
-      console.log(error);
-    };
-
-    // Callbacks de los sliders
-    function updateVal1() {
-      x = document.getElementById('range1').value;
-      document.getElementById('valores').innerHTML = 'Valores: ' + x + ', ' + y;
-      sendValues();
-    }
-
-    function updateVal2() {
-      y = document.getElementById('range2').value;
-      document.getElementById('valores').innerHTML = 'Valores: ' + x + ', ' + y;
-      sendValues();
-    }
-
-    // Enviar datos al server (poner dentro de un interval?)
-    function sendValues() {
-      var sendx = x; var sendy = y;
-      if(x < 1000) sendx = '0'+sendx;
-      if(y < 1000) sendy = '0'+sendy;
-      if(x < 100) sendx = '0'+sendx;
-      if(y < 100) sendy = '0'+sendy;
-      if(x < 10) sendx = '0'+sendx;
-      if(y < 10) sendy = '0'+sendy;
-      console.log('Cliente (envía): '+sendx+sendy);
-      socket.send(sendx+sendy);
-    }
-  </script>
+  <div class="media-container">
+    <object class="video" type="text/html" data="http://192.168.0.57:8080/video"></object>
+    <object class="audio" type="text/html" data="http://192.168.0.57:8080/audio.opus"></object>
+  </div>
+  <div class="controls">
+    <form id="IP_inputs" name="myform" action="" method="GET">
+      Webcam IP:
+      <input type="text" name="inputbox1" value="192.168.0.57">
+      <input type="button" name="button1" value="Load" onClick="readUrlAV(this.form)">
+      <br>
+      Rover IP:
+      <input type="text" name="inputbox2" value="192.168.0.149:81">
+      <input type="button" name="button2" value="Connect" onClick="connectWSS(this.form)">
+    </form>
+    
+    <input type='range' min='0' max='2046' value='490' id='range1' oninput='updateVal1()'>
+    <input type='range' min='0' max='2046' value='670' id='range2' oninput='updateVal2()'>
+    <p id='valores'></p>
+  </div>
+  <br><br>
+  <script type="text/javascript" src="script.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,22 @@
+.media-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.video {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.controls {
+    position: absolute;
+    z-index: 999;
+}
+
+#IP_inputs {
+    padding-top: 20px;
+    padding-left: 20px
+}
