@@ -12,7 +12,7 @@ function readUrlAV(form) { // Conectar a la camara IP
 
 function connectWSS(form) { // Iniciar wss
     // Iniciar websocket
-    socket = new WebSocket('ws://'+form.inputbox2.value+'/', ['arduino']);
+    socket = new WebSocket('ws://'+form.inputbox2.value+':81/', ['arduino']);
 
     // Callbacks de websocket
     socket.onopen = function () {

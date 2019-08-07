@@ -14,7 +14,8 @@
 #define BAUDRATE 115200 // Velocidad serial
 #define T_PERIOD 100 // Periodo de actualizacion de salidas (ms)
 #define INERT 4 // Factor de inercia en aceleracion
-#define MAX_WATCHDOG 10 // Maxima cantidad de loops antes de poner los setpoints en 0
+#define MAX_WATCHDOG 50 // Maxima cantidad de loops antes de poner los setpoints en 0
+//#define WIFI_PASS true // Red con contrasenia
 
 // Websocket puerto 81
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -23,8 +24,10 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 Ticker ticker;
 
 // Autenticacion red
-const char* ssid = "B93615";
-const char* password = "101344997";
+const char* ssid = "WiFi UNS";
+#ifdef WIFI_PASS
+  const char* password = "101344997";
+#endif
 
 int spL = 1023, spR = 1023; // Setpoints izq y der respectivamente (0..2046)
 int pwrL = 1023, pwrR = 1023; // Salidas izq y der respectivamente (0..2046)
@@ -117,7 +120,11 @@ void setup() {
   #endif
   
   // Conectarse a la red WiFi
-  WiFi.begin(ssid, password);  
+  #ifdef WIFI_PASS
+    WiFi.begin(ssid, password); // Con pass
+  #else
+    WiFi.begin(ssid); // Sin password
+  #endif
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     #ifdef DEBUG
