@@ -2,19 +2,19 @@
 #include <WebSocketsServer.h>
 #include <Ticker.h>
 
-// Numeros de pines
-#define FL_PIN 5 // Avance izq
-#define FR_PIN 4 // Avance der
-#define BL_PIN 0 // Retroceso izq
-#define BR_PIN 2 // Retroceso der
+// Pinout ESP8266 --> Entradas L298n
+#define FL_PIN 5 // Avance izq --> In_3
+#define BL_PIN 0 // Retroceso izq --> In_4
+#define FR_PIN 4 // Avance der --> In_1
+#define BR_PIN 2 // Retroceso der --> In_2
 
 // Parametros
 #define DEBUG true // Modo Debuggeo
 #define VERBOSE true // Mostrar texto en cada intercambio
 #define BAUDRATE 115200 // Velocidad serial
 #define T_PERIOD 100 // Periodo de actualizacion de salidas (ms)
-#define INERT 4 // Factor de inercia en aceleracion
-#define MAX_WATCHDOG 50 // Maxima cantidad de loops antes de poner los setpoints en 0
+#define INERT 6 // Factor de inercia en aceleracion
+#define MAX_WATCHDOG 10 // Maxima cantidad de loops antes de poner los setpoints en 0
 //#define WIFI_PASS true // Red con contrasenia
 
 // Websocket puerto 81
@@ -43,6 +43,7 @@ void updateOutputs(){
   if(watchdog >= MAX_WATCHDOG){ // Frenar en ausencia de comandos
     spL = 1023;
     spR = 1023;
+    watchdog = 0;
   }
 
   // Incremento-decremento gradual
@@ -67,7 +68,7 @@ void updateOutputs(){
   }
 
   #ifdef VERBOSE
-    Serial.printf("PL: %d, PR: %d\n", pwrL, pwrR);
+    Serial.printf("SPL: %d, SPR: %d -- PL: %d, PR: %d\n", spL, spR, pwrL, pwrR);    
   #endif
 
   // Enviar los valores calculados como feedback  
@@ -99,10 +100,7 @@ void webSocketEvent(uint8_t client, WStype_t type, uint8_t * payload, size_t len
       // Convertir valores a enteros y setear setpoints
       spL = atoi(val1);
       spR = atoi(val2);
-      watchdog = 0; // Reiniciar watchdog
-      #ifdef VERBOSE
-        Serial.printf("SPL: %d, SPR: %d\n", spL, spR);
-      #endif
+      watchdog = 0; // Reiniciar watchdog      
       break;
     }
   }

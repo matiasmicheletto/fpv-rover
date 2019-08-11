@@ -1,5 +1,7 @@
 # Control de robot Wi-Fi con Eyetracker Tobii
 
+![Foto](Img/photo.jpg)
+
 ### Materiales
 
   - NodeMCU Amica v3  
