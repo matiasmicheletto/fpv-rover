@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <link type="text/css" rel="stylesheet" href="style.css" />
+  <link type="text/css" rel="stylesheet" href="css/style.css" />
   <meta charset=utf-8>
   <title>WebSocket ESP8266</title>
 </head>
@@ -23,10 +23,13 @@
       <input type="button" name="button2" value="Connect" onClick="connectWSS(this.form)">
     </form>
     
-    <p id='pos'></p>
+    <p id='mousepos'></p>
+    <p id='eyepos'></p>
   </div>
 
-  <script type="text/javascript" src="script.js"></script>
+  <script type="text/javascript" src="js/tobii-web-client.js"></script>
+  <script type="text/javascript" src="js/eyetracker.js"></script>
+  <script type="text/javascript" src="js/index.js"></script>
 </body>
 
 </html>
