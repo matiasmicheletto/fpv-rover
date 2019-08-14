@@ -53,12 +53,37 @@ function sendValues(x,y) {
 }
 
 var mouseMoveEvent = function(e){ // Para trackear movimiento del mouse por la pantalla
-    if(Date.now() - lastSampleTime > 100){ // Muestrear posicion del mouse a 20 Hz
+    if(Date.now() - lastSampleTime > 100){ // Muestrear posicion del mouse a 10 Hz
         lastSampleTime = Date.now(); // Actualizar instante de muestreo
+
+        // Posicion del mouse en rango (0..2046,0..2046)
         var x = Math.floor(2046*e.clientX/window.innerWidth);
         var y = Math.floor(2046*e.clientY/window.innerHeight);
-        document.getElementById('mousepos').innerHTML = 'Posición: ' + x + ', ' + y;
-        sendValues(x,y);
+
+        // Mapeo de coordenadas: mouse (x,y) -> control (xp,yp) -> motores (a,b)
+        //
+        // Cambiar el rango de coordenadas de mouse a coordenadas de control
+        // Rango componente horizontal (delta motores):  xp -> (-2046 .. 2046) ---> xp = 2*x - 2046
+        // Rango componente vertical (promedio motores): yp -> (  0   .. 2046) ---> yp = 2046 - y
+        //
+        // Mapear coordenadas de control a potencia de motores 
+        // Delta motores:     xp = a-b         Con la comp horizontal manejo diferencia de potencias
+        // Promedio motores:  yp = (a+b)/2     Con la comp vertical manejo potencia de ambos a la vez
+        //
+        // Despeje
+        // a = xp/2 + yp
+        // b = yp - xp/2
+        //
+        // Finalmente reemplazar las ecuaciones de xp e yp con las posiciones del mouse
+        var a = x - y + 1023;
+        var b = 3069 - x - y;
+
+        // Hacer clamp para que no se salga de rango
+        a = a > 2046 ? 2046 : a < 0 ? 0 : a;
+        b = b > 2046 ? 2046 : b < 0 ? 0 : b;
+
+        document.getElementById('mousepos').innerHTML = 'Pwr: ' + a + ', ' + b;
+        sendValues(a,b);
     }
 };
 
