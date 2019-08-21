@@ -16,7 +16,7 @@
     overflow: hidden;
 }
 
-.controls {
+.network {
     position: absolute;
     z-index: 10;
 }
@@ -24,4 +24,12 @@
 #IP_inputs {
     padding-top: 20px;
     padding-left: 20px
+}
+
+.controls{
+    top:50%; 
+    left:50%; 
+    transform: translate(-50%, -50%);
+    position:absolute;
+    z-index: 10;
 }

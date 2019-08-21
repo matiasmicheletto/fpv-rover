@@ -1,14 +1,14 @@
 $fn=100;
 
 // Dimensiones
-L = 45; // Largo del pie
+L = 40; // Largo del pie
 H = 80; // Altura
 W = 7.5; // Ancho
 R = 7; // Radio curvatura angulo
 
 // Orificios para tornillos
 sep = 16; // Separacion
-db = 10; // Distancia al borde del pie
+db = 7.5; // Distancia al borde del pie
 
 
 module envolvente(){

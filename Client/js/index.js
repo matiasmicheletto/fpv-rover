@@ -2,7 +2,7 @@
 var socket = null; // Objeto para instanciar WebSocketServer
 var lastSampleTime = 0; // Variable auxiliar para medir frecuencia de muestreo de pos del mouse
 
-function readUrlAV(form) { // Conectar a la camara IP
+var readUrlAV = function(form) { // Conectar a la camara IP
     TextVar = form.inputbox1.value;
     VideoVar = "http://" + TextVar + ":8080/video";
     AudioVar = "http://" + TextVar + ":8080/audio.opus";
@@ -10,7 +10,7 @@ function readUrlAV(form) { // Conectar a la camara IP
     document.getElementById("audio").setAttribute('data', AudioVar);
 }
 
-function connectWSS(form) { // Iniciar wss
+var connectWSS = function(form) { // Iniciar wss
     // Iniciar websocket
     socket = new WebSocket('ws://'+form.inputbox2.value+':81/', ['arduino']);
 
@@ -35,7 +35,7 @@ function connectWSS(form) { // Iniciar wss
 }
 
 // Enviar datos al server (poner dentro de un interval?)
-function sendValues(x,y) {
+var sendValues = function(x,y) {
     
     var formatStr = function(number, length) { // Convertir numero a string de longitud fija
         var str = '' + number;
@@ -50,7 +50,13 @@ function sendValues(x,y) {
         socket.send(sendx + sendy);
         console.log('Cliente (envía): ' + sendx + sendy);
     }
-}
+};
+
+var updateKnob = function(x,y){ // Actualizar slider rotativo
+    // Convertir x,y en angulo respecto del centro de la pantalla
+    var t = Math.atan2(-(x-1023),(y-1023))/Math.PI*50+50;    
+    $('.knob').val(t).trigger('change');
+};
 
 var mouseMoveEvent = function(e){ // Para trackear movimiento del mouse por la pantalla
     if(Date.now() - lastSampleTime > 100){ // Muestrear posicion del mouse a 10 Hz
@@ -82,9 +88,19 @@ var mouseMoveEvent = function(e){ // Para trackear movimiento del mouse por la p
         a = a > 2046 ? 2046 : a < 0 ? 0 : a;
         b = b > 2046 ? 2046 : b < 0 ? 0 : b;
 
+        updateKnob(x,y);
+
         document.getElementById('mousepos').innerHTML = 'Pwr: ' + a + ', ' + b;
         sendValues(a,b);
     }
 };
 
+
 document.addEventListener("mousemove",mouseMoveEvent);
+
+$(function() {$(".knob").knob({ // Slider rotativo
+    'readOnly': true, // No escucha inputs
+    'displayInput':false // No muestra el valor que tiene (va de 0 a 100)
+});});
+
+
