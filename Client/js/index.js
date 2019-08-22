@@ -6,7 +6,7 @@ var readUrlAV = function(form) { // Conectar a la camara IP
     TextVar = form.inputbox1.value;
     VideoVar = "http://" + TextVar + ":8080/video";
     AudioVar = "http://" + TextVar + ":8080/audio.opus";
-    document.getElementById("video").setAttribute('data', VideoVar);
+    document.getElementById("video").setAttribute('src', VideoVar);
     document.getElementById("audio").setAttribute('data', AudioVar);
 }
 
@@ -99,8 +99,14 @@ var mouseMoveEvent = function(e){ // Para trackear movimiento del mouse por la p
 document.addEventListener("mousemove",mouseMoveEvent);
 
 $(function() {$(".knob").knob({ // Slider rotativo
-    'readOnly': true, // No escucha inputs
-    'displayInput':false // No muestra el valor que tiene (va de 0 a 100)
+    readOnly: true, // No escucha inputs
+    displayInput:false, // No muestra el valor que tiene (va de 0 a 100)
+    fgColor: '#111111',
+    bgColor: 'rgba(200,200,200,1)',
+    cursor : 30,
+    height: 500,
+    width: 500,
+    thickness: 0.2
 });});
 
 
