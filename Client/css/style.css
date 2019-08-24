@@ -1,6 +1,6 @@
 .media-container {
     position: absolute;
-    top:0;
+    top: 0;
     left: 0;
     margin: 0;
     width: 100%;
@@ -26,11 +26,45 @@
     padding-left: 20px
 }
 
-.controls{
+.controls {
     opacity: 0.6;
-    top:50%; 
-    left:50%; 
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
-    position:absolute;
+    position: absolute;
     z-index: 10;
+}
+
+.panel{
+    opacity: 0.9;
+    top: 50%;
+    left: 0%;
+    transform: rotate(-90deg) translate(20%, -60%);
+    position: absolute;
+    z-index: 10;
+}
+
+.inverted{
+    transform: rotate(180deg);
+}
+
+progress {
+    border: 0;
+    background: #eee;
+    border-radius: 100px;
+}
+
+progress::-moz-progress-bar {
+    border-radius: 100px;
+    background: linear-gradient(to right, rgba(29, 32, 206, 0.7), rgba(177, 33, 33, 1));
+}
+
+progress::-webkit-progress-bar {
+    background: #eee;
+    border-radius: 100px;
+}
+
+progress::-webkit-progress-value {
+    border-radius: 100px;
+    background: linear-gradient(to right, rgba(29, 32, 206, 0.6), rgba(177, 33, 33, 1));
 }

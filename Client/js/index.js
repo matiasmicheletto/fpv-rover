@@ -1,4 +1,3 @@
-
 var socket = null; // Objeto para instanciar WebSocketServer
 var lastSampleTime = 0; // Variable auxiliar para medir frecuencia de muestreo de pos del mouse
 
@@ -25,7 +24,10 @@ var connectWSS = function(form) { // Iniciar wss
 
     socket.onmessage = function (event) {
         console.log('Servidor (recibe): ', event.data);
-        // TODO: Actualizar indicadores visuales
+        // Convertir string en valores numericos de 4 digitos
+        var pwL = parseInt(event.data.slice(0,4));
+        var pwR = parseInt(event.data.slice(4,8));
+        updatePwrSliders(pwL,pwR);
     };
 
     socket.onerror = function (error) {
@@ -35,7 +37,7 @@ var connectWSS = function(form) { // Iniciar wss
 }
 
 // Enviar datos al server (poner dentro de un interval?)
-var sendValues = function(x,y) {
+var sendValues = function(l,r) {
     
     var formatStr = function(number, length) { // Convertir numero a string de longitud fija
         var str = '' + number;
@@ -43,19 +45,13 @@ var sendValues = function(x,y) {
         return str;
     };
 
-    var sendx = formatStr(x, 4);
-    var sendy = formatStr(y, 4);
+    var sendl = formatStr(l, 4);
+    var sendr = formatStr(r, 4);
 
     if(socket){
-        socket.send(sendx + sendy);
-        console.log('Cliente (envía): ' + sendx + sendy);
+        socket.send(sendl + sendr);
+        console.log('Cliente (envía): ' + sendl + sendr);
     }
-};
-
-var updateKnob = function(x,y){ // Actualizar slider rotativo
-    // Convertir x,y en angulo respecto del centro de la pantalla
-    var t = Math.atan2(-(x-1023),(y-1023))/Math.PI*50+50;    
-    $('.knob').val(t).trigger('change');
 };
 
 var mouseMoveEvent = function(e){ // Para trackear movimiento del mouse por la pantalla
@@ -66,47 +62,70 @@ var mouseMoveEvent = function(e){ // Para trackear movimiento del mouse por la p
         var x = Math.floor(2046*e.clientX/window.innerWidth);
         var y = Math.floor(2046*e.clientY/window.innerHeight);
 
-        // Mapeo de coordenadas: mouse (x,y) -> control (xp,yp) -> motores (a,b)
+        // Mapeo de coordenadas: mouse (x,y) -> control (xp,yp) -> motores (l,r)
         //
         // Cambiar el rango de coordenadas de mouse a coordenadas de control
         // Rango componente horizontal (delta motores):  xp -> (-2046 .. 2046) ---> xp = 2*x - 2046
         // Rango componente vertical (promedio motores): yp -> (  0   .. 2046) ---> yp = 2046 - y
         //
         // Mapear coordenadas de control a potencia de motores 
-        // Delta motores:     xp = a-b         Con la comp horizontal manejo diferencia de potencias
-        // Promedio motores:  yp = (a+b)/2     Con la comp vertical manejo potencia de ambos a la vez
+        // Delta motores:     xp = l-r         Con la comp horizontal manejo diferencia de potencias
+        // Promedio motores:  yp = (l+r)/2     Con la comp vertical manejo potencia de ambos a la vez
         //
         // Despeje
-        // a = xp/2 + yp
-        // b = yp - xp/2
+        // l = xp/2 + yp
+        // r = yp - xp/2
         //
         // Finalmente reemplazar las ecuaciones de xp e yp con las posiciones del mouse
-        var a = x - y + 1023;
-        var b = 3069 - x - y;
+        var l = x - y + 1023;
+        var r = 3069 - x - y;
 
         // Hacer clamp para que no se salga de rango
-        a = a > 2046 ? 2046 : a < 0 ? 0 : a;
-        b = b > 2046 ? 2046 : b < 0 ? 0 : b;
+        l = l > 2046 ? 2046 : l < 0 ? 0 : l;
+        r = r > 2046 ? 2046 : r < 0 ? 0 : r;
 
-        updateKnob(x,y);
-
-        document.getElementById('mousepos').innerHTML = 'Pwr: ' + a + ', ' + b;
-        sendValues(a,b);
+        updateKnob(x, y); // Actualizar slider circular central
+        updateSPSliders(l, r); // Actualizar barras de progreso de set points
+        document.getElementById('mousepos').innerHTML = 'Pwr: ' + l + ', ' + r; // Mostrar valores numericos
+        sendValues(l, r); // Enviar valores al server (rover)
     }
 };
 
-
 document.addEventListener("mousemove",mouseMoveEvent);
 
+// Indicador de direccion de avance
 $(function() {$(".knob").knob({ // Slider rotativo
-    readOnly: true, // No escucha inputs
-    displayInput:false, // No muestra el valor que tiene (va de 0 a 100)
-    fgColor: '#111111',
-    bgColor: 'rgba(200,200,200,1)',
-    cursor : 30,
-    height: 500,
-    width: 500,
-    thickness: 0.2
-});});
+        readOnly: true, // No escucha inputs
+        displayInput:false, // No muestra el valor que tiene (va de 0 a 100)
+        fgColor: '#111111',
+        bgColor: 'rgba(200,200,200,1)',
+        cursor : 30,
+        height: 500,
+        width: 500,
+        thickness: 0.2
+    });
+});
 
+var updateKnob = function(x,y){ // Actualizar slider rotativo
+    // Convertir x,y en angulo respecto del centro de la pantalla
+    var t = Math.atan2(-(x-1023),(y-1023))/Math.PI*50+50;    
+    $('.knob').val(t).trigger('change');
+};
 
+// Indicadores de potencia de motores
+var updatePwrSliders = function(pwL, pwR){
+    document.getElementById("pwLB").value = (1023-pwL)/1023*100;
+    document.getElementById("pwLF").value = (pwL-1023)/1023*100;
+
+    document.getElementById("pwRB").value = (1023-pwR)/1023*100;
+    document.getElementById("pwRF").value = (pwR-1023)/1023*100;
+};
+
+// Indicadores de set points
+var updateSPSliders = function(spL, spR){
+    document.getElementById("spLB").value = (1023-spL)/1023*100;
+    document.getElementById("spLF").value = (spL-1023)/1023*100;
+
+    document.getElementById("spRB").value = (1023-spR)/1023*100;
+    document.getElementById("spRF").value = (spR-1023)/1023*100;
+};

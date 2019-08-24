@@ -9,11 +9,13 @@
 
 <body>
 
+  <!-- Fondo con captura de video y audio -->
   <div class="media-container">
     <img id="video" class="video" src="http://10.3.12.212:8080/video" />
     <object id="audio" class="audio" type="text/html" data="http://10.3.166.75:8080/audio.opus"></object>
   </div>
 
+  <!-- Inputs de conectividad con rover y camara IP-->
   <div class="network">
     <form id="IP_inputs" name="myform" action="" method="GET">
       Webcam IP:
@@ -29,7 +31,23 @@
     <p id='eyepos'></p>
   </div>
 
-  <!-- Proyect from: http://anthonyterrien.com/knob/-->
+  <!-- Indicadores de set point y valor actual de salidas -->
+  <div class="panel">
+    <progress class="inverted" id="spLB" value="0" max="100" min="0"></progress>
+    <progress id="spLF" value="0" max="100" min="0"></progress>  L
+    <br>
+    <progress class="inverted" id="spRB" value="0" max="100" min="0"></progress>
+    <progress id="spRF" value="0" max="100" min="0"></progress>  R
+    <br><br>
+    <progress class="inverted" id="pwLB" value="0" max="100" min="0"></progress>
+    <progress id="pwLF" value="0" max="100" min="0"></progress>  L
+    <br>
+    <progress class="inverted" id="pwRB" value="0" max="100" min="0"></progress>
+    <progress id="pwRF" value="0" max="100" min="0"></progress>  R
+  </div>
+
+  <!-- Project from: http://anthonyterrien.com/knob/-->
+  <!-- Indicador de control enviado -->
   <div class="controls">    
     <input class="knob">
   </div>
