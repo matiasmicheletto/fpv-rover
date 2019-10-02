@@ -10,12 +10,12 @@
 
 // Parametros
 #define DEBUG true // Modo Debuggeo
-#define VERBOSE true // Mostrar texto en cada intercambio
+//#define VERBOSE true // Mostrar texto en cada intercambio
 #define BAUDRATE 115200 // Velocidad serial
 #define T_PERIOD 100 // Periodo de actualizacion de salidas (ms)
 #define INERT 6 // Factor de inercia en aceleracion
 #define MAX_WATCHDOG 10 // Maxima cantidad de loops antes de poner los setpoints en 0
-//#define WIFI_PASS true // Red con contrasenia
+#define WIFI_PASS true // Red con contrasenia
 
 // Websocket puerto 81
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -24,9 +24,9 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 Ticker ticker;
 
 // Autenticacion red
-const char* ssid = "WiFi UNS";
+const char* ssid = "Speedy-68EA7C";
 #ifdef WIFI_PASS
-  const char* password = "101344997";
+  const char* password = "0100017716";
 #endif
 
 int spL = 1023, spR = 1023; // Setpoints izq y der respectivamente (0..2046)

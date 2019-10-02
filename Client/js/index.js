@@ -1,5 +1,8 @@
 var socket = null; // Objeto para instanciar WebSocketServer
-var lastSampleTime = 0; // Variable auxiliar para medir frecuencia de muestreo de pos del mouse
+var lastMouseSampleTime = 0; // Variable auxiliar para medir frecuencia de muestreo de pos del mouse
+var lastEyetrackerSampleTime = 0; // Variable auxiliar para medir frecuencia de muestreo de pos del eyetracker
+
+Eyetracker.init(); // Inicializar eyetracker (debe estar ejecutando el server)
 
 var readUrlAV = function(form) { // Conectar a la camara IP
     TextVar = form.inputbox1.value;
@@ -54,9 +57,30 @@ var sendValues = function(l,r) {
     }
 };
 
+Eyetracker.onData = function(x,y) {
+    if(Date.now() - lastEyetrackerSampleTime > 100){ // Muestrear posicion a 10 Hz
+        lastEyetrackerSampleTime = Date.now(); // Actualizar instante de muestreo
+
+        // Posicion en rango (0..2046,0..2046)
+        var xx = Math.floor(2046*x);
+        var yy = Math.floor(2046*y);
+
+        var l = xx - yy + 1023;
+        var r = 3069 - xx - yy;
+
+        // Hacer clamp para que no se salga de rango
+        l = l > 2046 ? 2046 : l < 0 ? 0 : l;
+        r = r > 2046 ? 2046 : r < 0 ? 0 : r;
+
+        updateKnob(xx, yy); // Actualizar slider circular central
+        updateSPSliders(l, r); // Actualizar barras de progreso de set points
+        sendValues(l, r); // Enviar valores al server (rover)
+    }
+};
+
 var mouseMoveEvent = function(e){ // Para trackear movimiento del mouse por la pantalla
-    if(Date.now() - lastSampleTime > 100){ // Muestrear posicion del mouse a 10 Hz
-        lastSampleTime = Date.now(); // Actualizar instante de muestreo
+    if(Date.now() - lastMouseSampleTime > 100){ // Muestrear posicion del mouse a 10 Hz
+        lastMouseSampleTime = Date.now(); // Actualizar instante de muestreo
 
         // Posicion del mouse en rango (0..2046,0..2046)
         var x = Math.floor(2046*e.clientX/window.innerWidth);

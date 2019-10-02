@@ -1,6 +1,5 @@
 window.Eyetracker = (function(){
     return {
-        tracking: false, // Estado midiendo/detenido        
         init: function(){ // Inicializar eyetracker
             TobiiWeb_Client.start({
                 enable_state_machine_logs : true, 
@@ -16,8 +15,7 @@ window.Eyetracker = (function(){
                         filter: "none",
                         filter_size: 3,
                         onGazeCoordinates: function(x,y,t){ // Callback de datos recibidos
-                            if(this.tracking)
-                                this.onData(x/window.innerWidth, y/window.innerHeight);
+                            this.onData(x/window.innerWidth, y/window.innerHeight);
                         }
                     }),
                     "Echo_Service" : function(message){
@@ -25,7 +23,7 @@ window.Eyetracker = (function(){
                     },
                     "Screenshot_Service" : function(message){
                         console.log("received: ");
-                        console.log(message)
+                        console.log(message);
                     }
                 }
               });
