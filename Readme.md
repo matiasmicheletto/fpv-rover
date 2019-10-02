@@ -1,6 +1,8 @@
 # Control de robot Wi-Fi con Eyetracker Tobii
 
-![Foto](Img/photo.jpg)
+![Foto](Img/20190925_160452.jpg)
+
+![Foto](Img/Screenshot.png)
 
 ### Materiales
 
