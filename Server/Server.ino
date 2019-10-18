@@ -24,9 +24,9 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 Ticker ticker;
 
 // Autenticacion red
-const char* ssid = "Speedy-68EA7C";
+const char* ssid = "EyeRobot";
 #ifdef WIFI_PASS
-  const char* password = "0100017716";
+  const char* password = "eyerobot123";
 #endif
 
 int spL = 1023, spR = 1023; // Setpoints izq y der respectivamente (0..2046)
