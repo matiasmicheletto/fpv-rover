@@ -16,16 +16,16 @@
 
 ### Instrucciones de uso
 
-  1. Configurar el smartphone como hotspot usando "EyeRobot" como nombre de red (SSID) y "eyerobot123" como password:
+  1. Configurar el smartphone como hotspot usando "EyeRobot" como nombre de red (SSID) y "eyerobot123" como password:  
   ![Android AP](Img/smartphone_ap_LR.jpg)
-  2. Encender el Rover.
-  3. Verificar en el smarphone que el rover se haya conectado a la red correctamente y anotar el número de IP del dispositivo:
+  2. Encender el Rover.  
+  3. Verificar en el smarphone que el rover se haya conectado a la red correctamente y anotar el número de IP del dispositivo:  
   ![Foto](Img/smartphone_rover_ip_LR.jpg)
-  4. Ejecutar la app de cámara IP y anotar la IP de conexión.
-  5. Instalar el smartphone en el rover. Es recomendable usar una aplicación de control remoto para el smartphone, de modo de poder controlarlo desde la PC sin tener que quitarlo del rover.
-  6. Conectar la PC a la red wifi "EyeRobot".
-  7. Ejecutar la web con Chrome, en la PC.
-  8. Ingresar las IPs del rover y de la cámara IP y presionar los botones para establecer la conexión.
+  4. Ejecutar la app de cámara IP y anotar la IP de conexión.  
+  5. Instalar el smartphone en el rover. Es recomendable usar una aplicación de control remoto para el smartphone, de modo de poder controlarlo desde la PC sin tener que quitarlo del rover.  
+  6. Conectar la PC a la red wifi "EyeRobot".  
+  7. Ejecutar la web con Chrome, en la PC.  
+  8. Ingresar las IPs del rover y de la cámara IP y presionar los botones para establecer la conexión.  
 
 ### Tobii EyeX Web Socket Server
 
