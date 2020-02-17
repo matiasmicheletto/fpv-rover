@@ -1,10 +1,15 @@
 # Control de robot FPV Wi-Fi con Eyetracker Tobii
 
+## Esquema general
+![Esquema](Img/GeneralSchemeLR.png)  
+
+## Robot
 ![Foto](Img/Assembling_6.jpg)  
 
+## Video captura del control con mouse
 [![Demo FPV](Img/Screenshot.png)](https://www.youtube.com/watch?v=7270GWGmxQA)  
 
-### Requerimientos recomendados
+## Requerimientos recomendados
 
   - NodeMCU Amica v3.  
   - L298n Dual Full-Bridge.  
@@ -14,7 +19,7 @@
   https://play.google.com/store/apps/details?id=com.pas.webcam&hl=es_AR 
   - Navegador web Chrome.  
 
-### Instrucciones de uso
+## Instrucciones de uso
 
   1. Configurar el smartphone como hotspot usando "EyeRobot" como nombre de red (SSID) y "eyerobot123" como password:  
   ![Android AP](Img/smartphone_ap_LR.jpg)
@@ -27,7 +32,7 @@
   7. Ejecutar la web con Chrome, en la PC.  
   8. Ingresar las IPs del rover y de la cámara IP y presionar los botones para establecer la conexión.  
 
-### Tobii EyeX Web Socket Server
+## Tobii EyeX Web Socket Server
 
 El autor del Web Socket Server para el Eyetracker Tobii es Stevche Radevski:  
 https://github.com/sradevski/Tobii-EyeX-Web-Socket-Server  
