@@ -1,7 +1,7 @@
 # Control de robot FPV Wi-Fi con Eyetracker Tobii
 
 ## Esquema general
-![Esquema](Img/GeneralSchemeLR.png)  
+![Esquema](Img/GeneralScheme.png)  
 
 ## Robot
 ![Foto](Img/Assembling_6.jpg)  
