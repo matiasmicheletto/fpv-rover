@@ -1,43 +1,51 @@
-# Control de robot FPV Wi-Fi con Eyetracker Tobii
+# Eyetracker controlled FPV Wi-Fi rover 
 
-## Esquema general
-![Esquema](Img/GeneralScheme.png)  
+This project consists on a simple three-wheeled rover built on the [chassis kit](https://www.amazon.com/perseids-Chassis-Encoder-Wheels-Battery/dp/B07DNYQ3PX/ref=sr_1_5?dchild=1&keywords=arduino+rover+robot&qid=1630333979&sr=8-5) that you can control using a [Tobii Eyetracker](https://www.amazon.com/-/es/Tobii-Eye-Tracker-herramienta-seguimiento/dp/B01MAWPMXQ).  
 
-## Robot
-![Foto](Img/Assembling_6.jpg)  
+Basically, through a web based client application that you can run in your browser, you get a HUD on your screen with the rover's point of view, and by moving your gaze over the HUD, you send the control action to the rover via web socket commands.
 
-## Video captura del control con mouse
-[![Demo FPV](Img/Screenshot.png)](https://www.youtube.com/watch?v=7270GWGmxQA)  
+If you replace the rover with a wheelchair and mount the computer and IP camera on the same wheelchair, then you'd be able to control it with your gaze. Of course a lot of safety rules and fine tunning is required to achieve this, but this project provide the basic hardware to begin with.
 
-## Requerimientos recomendados
+
+## System main components
+![Esquema](Img/GeneralSchemeWB.png)  
+
+## The assembled rover
+![Foto](Img/assembling/Assembling_6.jpg)  
+
+## Screen capture of the client application (controlled with mouse)
+[![Demo FPV](Img/screen-capture.gif)](https://www.youtube.com/watch?v=7270GWGmxQA)  
+
+## Recommended requirements
 
   - NodeMCU Amica v3.  
   - L298n Dual Full-Bridge.  
-  - Kit Chasis Robot 3 Ruedas.  
+  - Kit 3 wheeled robot.  
   - Tobii Eyetracker.  
-  - Android Smartphone con app de cámara IP. Por ejemplo:  
-  https://play.google.com/store/apps/details?id=com.pas.webcam&hl=es_AR 
-  - Navegador web Chrome.  
+  - Android Smartphone with IP camera app. For example:  
+  https://play.google.com/store/apps/details?id=com.pas.webcam&hl=en  
+  - Chrome web browser.  
 
-## Instrucciones de uso
+## Getting started
 
-  1. Configurar el smartphone como hotspot usando "EyeRobot" como nombre de red (SSID) y "eyerobot123" como password:  
+  1. Configure the smartphone as hotspot using "EyeRobot" as SSID and "eyerobot123" as password:  
   ![Android AP](Img/smartphone_ap_LR.jpg)
-  2. Encender el Rover.  
-  3. Verificar en el smarphone que el rover se haya conectado a la red correctamente y anotar el número de IP del dispositivo:  
+  2. Turn on the rover.  
+  3. Using the smartphone, verify that the rover has successfully conected and write down the IP address of the device:  
   ![Foto](Img/smartphone_rover_ip_LR.jpg)
-  4. Ejecutar la app de cámara IP y anotar la IP de conexión.  
-  5. Instalar el smartphone en el rover. Es recomendable usar una aplicación de control remoto para el smartphone, de modo de poder controlarlo desde la PC sin tener que quitarlo del rover.  
-  6. Conectar la PC a la red wifi "EyeRobot".  
-  7. Ejecutar la web con Chrome, en la PC.  
-  8. Ingresar las IPs del rover y de la cámara IP y presionar los botones para establecer la conexión.  
+  4. Run the IP camera app and write down the connection IP.  
+  5. Attach the smartphone to the rover. It is also recommended a remote control app for the smartphone, so you can use it from the computer without removing it from the rover.  
+  6. Connect your personal computer to the "EyeRobot" wifi network.  
+  7. Run the client with the Chrome browser, in your PC.  
+  8. Put the corresponding IP addresses of the rover and the IP camera and push the "connect" buttons to stablish the websocket conection.  
+  9. That's it. Have fun!  
 
 ## Tobii EyeX Web Socket Server
 
-El autor del Web Socket Server para el Eyetracker Tobii es Stevche Radevski:  
+The author of the Eyetracker Tobii Web Socket Server is Stevche Radevski:  
 https://github.com/sradevski/Tobii-EyeX-Web-Socket-Server  
 
 
-## Licencia
+## License
 
-Este proyecto está publicado bajo licencia GPL V3.0.
+This project is published under the GPL V3.0 license.
