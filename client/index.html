@@ -8,17 +8,14 @@
 </head>
 
 <body>
-  <!-- Fondo con captura de video y audio -->
   <div class="media-container">
-    <img id="video" class="video" src="http://10.3.12.212:8080/video" />
-    <object id="audio" class="audio" type="text/html" data="http://10.3.166.75:8080/audio.opus"></object>
+    <img id="video" class="video" src="http://192.168.0.108:81/stream" />
   </div>
 
-  <!-- Inputs de conectividad con rover y camara IP-->
   <div class="network">
     <form id="IP_inputs" name="myform" action="" method="GET">
       Webcam IP:
-      <input type="text" name="inputbox1" value="192.168.43.1">
+      <input type="text" name="inputbox1" value="192.168.0.108">
       <input type="button" name="button1" value="Load" onClick="readUrlAV(this.form)">
       <br>
       Rover IP:
@@ -30,7 +27,6 @@
     <p id='eyepos'></p>
   </div>
 
-  <!-- Indicadores de set point y valor actual de salidas -->
   <div class="panel">
     <progress class="inverted" id="spLB" value="0" max="100" min="0"></progress>
     <progress id="spLF" value="0" max="100" min="0"></progress>  L
@@ -45,16 +41,12 @@
     <progress id="pwRF" value="0" max="100" min="0"></progress>  R
   </div>
 
-  <!-- Project from: http://anthonyterrien.com/knob/-->
-  <!-- Indicador de control enviado -->
   <div class="controls">    
     <input class="knob">
   </div>
 
   <script type="text/javascript" src="js/jquery.min.js"></script>
-  <script type="text/javascript" src="js/jquery.knob.min.js"></script>
-  <script type="text/javascript" src="js/tobii-web-client.js"></script>
-  <script type="text/javascript" src="js/eyetracker.js"></script>
+  <script type="text/javascript" src="js/jquery.knob.min.js"></script>  
   <script type="text/javascript" src="js/index.js"></script>
 </body>
 
