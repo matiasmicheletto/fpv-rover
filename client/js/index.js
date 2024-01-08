@@ -1,14 +1,15 @@
-const socket = null;
-const lastMouseSampleTime = 0;
+let socket = null;
+let lastMouseSampleTime = 0;
 
 const readUrlAV = function(form) {
-    TextVar = form.inputbox1.value;
-    VideoVar = "http://" + TextVar + ":81/stream";    
+    const TextVar = form.inputbox1.value;
+    const VideoVar = "http://" + TextVar;// + ":81/stream";    
+    console.log(VideoVar);
     document.getElementById("video").setAttribute('src', VideoVar);
 }
 
 const connectWSS = function(form) {
-    socket = new WebSocket('ws://'+form.inputbox2.value+':81/', ['arduino']);
+    socket = new WebSocket('ws://'+form.inputbox2.value, ['arduino']);
     socket.onopen = function () {
         console.log("Connection stablished");
     };
@@ -31,7 +32,7 @@ const connectWSS = function(form) {
 
 const sendValues = function(l,r) {
     const padStart = function(number, length) {
-        const str = '' + number;
+        let str = '' + number;
         while (str.length < length) str = '0' + str;
         return str;
     };

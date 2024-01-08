@@ -1,11 +1,13 @@
-#include "esp_camera.h"
 #include <WiFi.h>
+#include "esp_camera.h"
+#include "credentials.h"
+/* content of credentials.h
+    const char* ssid = "YOUR_NETWORK_SSID";
+    const char* password = "YOUR_NETWORK_PASSWORD";
+*/
 
 #define CAMERA_MODEL_AI_THINKER
 #include "camera_pins.h"
-
-const char* ssid = "Pauwifi-Radanet";
-const char* password = "r4s6e57q";
 
 void startCameraServer();
 void setupLedFlash(int pin);
