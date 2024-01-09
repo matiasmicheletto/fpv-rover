@@ -3,14 +3,9 @@
 #include "esp_camera.h"
 #include "img_converters.h"
 #include "fb_gfx.h"
-#include "esp32-hal-ledc.h"
 #include "sdkconfig.h"
 #include "esp32-hal-log.h"
 
-#define LED_LEDC_CHANNEL 2
-#define CONFIG_LED_MAX_INTENSITY 255
-
-int led_duty = 0;
 bool isStreaming = false;
 
 typedef struct
@@ -39,38 +34,23 @@ static ra_filter_t ra_filter;
 
 static ra_filter_t *ra_filter_init(ra_filter_t *filter, size_t sample_size) {
     memset(filter, 0, sizeof(ra_filter_t));
-
     filter->values = (int *)malloc(sample_size * sizeof(int));
-    
     if (!filter->values) return NULL;
-    
     memset(filter->values, 0, sample_size * sizeof(int));
-
     filter->size = sample_size;
     return filter;
 }
 
 static int ra_filter_run(ra_filter_t *filter, int value) {
     if (!filter->values) return value;
-
     filter->sum -= filter->values[filter->index];
     filter->values[filter->index] = value;
     filter->sum += filter->values[filter->index];
     filter->index++;
     filter->index = filter->index % filter->size;
-    
     if (filter->count < filter->size)
         filter->count++;
-
     return filter->sum / filter->count;
-}
-
-void enable_led(bool en) {
-    int duty = en ? led_duty : 0;
-    if (en && isStreaming && (led_duty > CONFIG_LED_MAX_INTENSITY)) 
-        duty = CONFIG_LED_MAX_INTENSITY;
-    ledcWrite(LED_LEDC_CHANNEL, duty);
-    log_i("Set LED intensity to %d", duty);
 }
 
 static size_t jpg_encode_stream(void *arg, size_t index, const void *data, size_t len) {
@@ -99,7 +79,6 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     httpd_resp_set_hdr(req, "X-Framerate", "60");
     isStreaming = true;
-    enable_led(true);
 
     while (true) {
         fb = esp_camera_fb_get();
@@ -151,7 +130,6 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     }
 
     isStreaming = false;
-    enable_led(false);
     return res;
 }
 
@@ -182,9 +160,4 @@ void startCameraServer(int& port) {
         httpd_register_uri_handler(stream_httpd, &stream_uri);
 
     port = config.server_port;
-}
-
-void setupLedFlash(int pin) {
-    ledcSetup(LED_LEDC_CHANNEL, 5000, 8);
-    ledcAttachPin(pin, LED_LEDC_CHANNEL);
 }

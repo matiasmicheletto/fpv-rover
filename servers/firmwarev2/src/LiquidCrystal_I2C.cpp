@@ -1,12 +1,10 @@
-// Based on the work by DFRobot
-
 #include "LiquidCrystal_I2C.h"
 #include <inttypes.h>
 #if defined(ARDUINO) && ARDUINO >= 100
 
 #include "Arduino.h"
 
-#define printIIC(args)	Wire.write(args)
+#define printIIC(args) I2CDisplay.write(args)
 inline size_t LiquidCrystal_I2C::write(uint8_t value) {
 	send(value, Rs);
 	return 1;
@@ -15,7 +13,7 @@ inline size_t LiquidCrystal_I2C::write(uint8_t value) {
 #else
 #include "WProgram.h"
 
-#define printIIC(args)	Wire.send(args)
+#define printIIC(args)	I2CDisplay.send(args)
 inline void LiquidCrystal_I2C::write(uint8_t value) {
 	send(value, Rs);
 }
@@ -23,7 +21,7 @@ inline void LiquidCrystal_I2C::write(uint8_t value) {
 #endif
 #include "Wire.h"
 
-
+TwoWire I2CDisplay = TwoWire(0);
 
 // When the display powers up, it is configured as follows:
 //
@@ -63,7 +61,7 @@ void LiquidCrystal_I2C::init(){
 
 void LiquidCrystal_I2C::init_priv()
 {
-	Wire.begin();
+  I2CDisplay.begin(I2C_SDA, I2C_SCL, 100000);
 	_displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 	begin(_cols, _rows);  
 }
@@ -265,9 +263,9 @@ void LiquidCrystal_I2C::write4bits(uint8_t value) {
 }
 
 void LiquidCrystal_I2C::expanderWrite(uint8_t _data){                                        
-	Wire.beginTransmission(_Addr);
+	I2CDisplay.beginTransmission(_Addr);
 	printIIC((int)(_data) | _backlightval);
-	Wire.endTransmission();   
+	I2CDisplay.endTransmission();   
 }
 
 void LiquidCrystal_I2C::pulseEnable(uint8_t _data){

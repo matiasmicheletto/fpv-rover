@@ -10,9 +10,11 @@ const readUrlAV = function(form) {
 
 const connectWSS = function(form) {
     socket = new WebSocket('ws://'+form.inputbox2.value, ['arduino']);
+    
     socket.onopen = function () {
         console.log("Connection stablished");
     };
+
     socket.onclose = function () {
         console.log("Connection closed");
     };
