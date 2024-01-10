@@ -6,8 +6,6 @@
 #include "sdkconfig.h"
 #include "esp32-hal-log.h"
 
-bool isStreaming = false;
-
 typedef struct
 {
     httpd_req_t *req;
@@ -78,7 +76,6 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
     httpd_resp_set_hdr(req, "X-Framerate", "60");
-    isStreaming = true;
 
     while (true) {
         fb = esp_camera_fb_get();
@@ -129,25 +126,18 @@ static esp_err_t stream_handler(httpd_req_t *req) {
         log_i("MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)");
     }
 
-    isStreaming = false;
     return res;
 }
 
 void startCameraServer(int& port) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 16;
+    config.max_uri_handlers = 8;
 
     httpd_uri_t stream_uri = {
         .uri = "/stream",
         .method = HTTP_GET,
         .handler = stream_handler,
         .user_ctx = NULL
-    #ifdef CONFIG_HTTPD_WS_SUPPORT
-        ,
-        .is_websocket = true,
-        .handle_ws_control_frames = false,
-        .supported_subprotocol = NULL
-    #endif
     };
 
     ra_filter_init(&ra_filter, 20);

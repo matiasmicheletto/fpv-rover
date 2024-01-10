@@ -6,9 +6,9 @@
 #include "Print.h" 
 #include <Wire.h>
 
-// custom pins
-#define I2C_SDA 14
-#define I2C_SCL 15
+// custom pins (UART Pins, use with care)
+#define I2C_SDA 1
+#define I2C_SCL 3
 
 // commands
 #define LCD_CLEARDISPLAY 0x01

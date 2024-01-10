@@ -20,7 +20,7 @@ const connectWSS = function(form) {
     };
 
     socket.onmessage = function (event) {
-        console.log('Received: ', event.data);        
+        console.log('Received from server: ', event.data);
         const pwL = parseInt(event.data.slice(0,4));
         const pwR = parseInt(event.data.slice(4,8));
         updatePwrSliders(pwL,pwR);
@@ -41,8 +41,9 @@ const sendValues = function(l,r) {
     const sendl = padStart(l, 4);
     const sendr = padStart(r, 4);
     if(socket){
-        socket.send(sendl + sendr);
-        console.log('Client (sent): ' + sendl + sendr);
+        const msg = `${sendl}${sendr}`;
+        socket.send(msg);
+        console.log('Sent to server: ' + msg);
     }
 };
 
