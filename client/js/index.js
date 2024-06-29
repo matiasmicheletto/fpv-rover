@@ -73,7 +73,7 @@ const mouseMoveEvent = function(e){
 
         updateKnob(x, y);
         updateSPSliders(l, r);
-        document.getElementById('mousepos').innerHTML = 'Pwr: ' + l + ', ' + r;
+        document.getElementById('mousepos').innerHTML = 'Acción de control: ' + l + ', ' + r;
         sendValues(l, r);
     }
 };

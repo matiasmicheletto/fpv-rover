@@ -9,22 +9,19 @@
 
 <body>
   <div class="media-container">
-    <img id="video" class="video" src="http://192.168.0.106:81/stream" />
+    <img id="video" class="video"/>
   </div>
 
   <div class="network">
     <form id="IP_inputs" name="myform" action="" method="GET">
-      Webcam URL:
-      <input type="text" name="inputbox1" value="192.168.0.106:81/stream">
-      <input type="button" name="button1" value="Load" onClick="readUrlAV(this.form)">
-      <br>
-      Rover URL:
-      <input type="text" name="inputbox2" value="192.168.0.106:82/">
+      RoverURL:
+      <input type="text" name="inputbox1" value="192.168.0.106:81">
+      <input type="button" name="button" value="Connect" onClick="readUrlAV(this.form)">
+      <!--
       <input type="button" name="button2" value="Connect" onClick="connectWSS(this.form)">
+      -->
     </form>
-
-    <p id='mousepos'></p>
-    <p id='eyepos'></p>
+    <p style="margin-left: 20px;" id='mousepos'></p>
   </div>
 
   <div class="panel">
