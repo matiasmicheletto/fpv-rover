@@ -13,13 +13,19 @@
   </div>
 
   <div class="network">
-    <form id="IP_inputs" name="myform" action="" method="GET">
+    <form id="inputForm" name="inputForm" action="" method="GET">
       RoverURL:
-      <input type="text" name="inputbox1" value="192.168.0.106:81">
-      <input type="button" name="button" value="Connect" onClick="readUrlAV(this.form)">
-      <!--
-      <input type="button" name="button2" value="Connect" onClick="connectWSS(this.form)">
-      -->
+      <input 
+        id="ipInput" 
+        type="text" 
+        name="inputbox" 
+        value="0.0.0.0">
+      <input 
+        id="connectButton" 
+        type="button" 
+        name="connectButton" 
+        value="Connect" 
+        onClick="connectToRover(this.form)">
     </form>
     <p style="margin-left: 20px;" id='mousepos'></p>
   </div>
@@ -44,6 +50,7 @@
 
   <script type="text/javascript" src="js/jquery.min.js"></script>
   <script type="text/javascript" src="js/jquery.knob.min.js"></script>  
+  <script type="text/javascript" src="js/util.js"></script>
   <script type="text/javascript" src="js/index.js"></script>
 </body>
 

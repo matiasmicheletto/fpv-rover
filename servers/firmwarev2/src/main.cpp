@@ -1,82 +1,12 @@
-#define WIFI_ENABLED 1
-#define CAM_ENABLED 1
-#define WSS_ENABLED 1
-#define PWM_OUTPUTS_ENABLED 1
-//#define DISPLAY_ENABLED 1
-
-#ifdef WIFI_ENABLED
-  #include <WiFi.h>
-  #include "credentials.h"
-  /* content of credentials.h
-    const char* ssid = "YOUR_NETWORK_SSID";
-    const char* password = "YOUR_NETWORK_PASSWORD";
-  */
-#endif
-#ifdef CAM_ENABLED
-  #include "esp_camera.h"
-#endif
-#ifdef WSS_ENABLED
-  #include "WebSocketsServer.h"
-#endif
-#ifdef DISPLAY_ENABLED
-  #include "LiquidCrystal_I2C.h"
-#endif
-
-// General config
-#define BAUDRATE 115200
-#define INERT 6 // Acceleration inertia factor
-#define MAX_WATCHDOG 10 // Max. number of loops before all stop
-
-// OV260 pins
-#ifdef CAM_ENABLED
-  #define CAMERA_MODEL_AI_THINKER
-  #define PWDN_GPIO_NUM     32
-  #define RESET_GPIO_NUM    -1
-  #define XCLK_GPIO_NUM      0
-  #define SIOD_GPIO_NUM     26
-  #define SIOC_GPIO_NUM     27
-  #define Y9_GPIO_NUM       35
-  #define Y8_GPIO_NUM       34
-  #define Y7_GPIO_NUM       39
-  #define Y6_GPIO_NUM       36
-  #define Y5_GPIO_NUM       21
-  #define Y4_GPIO_NUM       19
-  #define Y3_GPIO_NUM       18
-  #define Y2_GPIO_NUM        5
-  #define VSYNC_GPIO_NUM    25
-  #define HREF_GPIO_NUM     23
-  #define PCLK_GPIO_NUM     22
-#endif
-#define LED_GPIO_NUM      33
-#define FLASH_LED_NUM     4
-
-// H bridge control pins
-#ifdef PWM_OUTPUTS_ENABLED
-  #define FL_PIN 13 // Left forward --> In_3
-  #define BL_PIN 14 // Left backward --> In_4
-  #define FR_PIN 15 // Right forward --> In_1
-  #define BR_PIN 2 // Right backward --> In_2
-#endif
-
-// LCD display configuration
-#ifdef DISPLAY_ENABLED
-  #define LCD_ADDR 0x27 // Or 0x3F if not working
-  #define LCD_COLS 20
-  #define LCD_ROWS 4
-#endif
+#include "config.h"
 
 // Prototypes
+
 #ifdef CAM_ENABLED
   void startCameraServer(int& port);
 #endif
 
-// Params
-int spL = 1023, spR = 1023; // Left and right (0..2046)
-int pwrL = 1023, pwrR = 1023; // Left and right outputs (0..2046)
-int watchdog = 0; // Output updates counter
-
 #ifdef WSS_ENABLED
-  #define WSS_PORT 82
   WebSocketsServer webSocketSvr(WSS_PORT);
   uint8_t client_num; // Number of clients 
   bool wss_connected = false;
@@ -86,12 +16,10 @@ int watchdog = 0; // Output updates counter
   LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS); 
 #endif
 
-int parseValue(char * ptr, int size) {
-  char val[size+1];
-  memcpy(val, ptr, size);
-  val[size] = '\0';
-  return atoi(val);
-}
+// Global variables
+int leftSetpoint = PWM_MAX, rightSetpoint = PWM_MAX; // Left and right (0..255)
+int leftOutput = PWM_MAX, rightOutput = PWM_MAX; // Left and right outputs (0..255)
+int watchdog = 0; // Output updates counter
 
 #ifdef WSS_ENABLED
   void webSocketEvent(uint8_t client, WStype_t type, uint8_t * payload, size_t length) {
@@ -109,12 +37,12 @@ int parseValue(char * ptr, int size) {
       }
       case WStype_TEXT:{
         client_num = client;
-        // Payload must have 8 digit from 0 a 2046
-        char val1[5];
+        // Payload must have 6 digit from 000 to 255
         // Convert both values to integer and update setpoints
-        spL = parseValue((char*) payload, 4);
-        spR = parseValue((char*) payload+4, 4);
-        Serial.printf("New setpoints: (%d,%d) \n",spL, spR);
+        const int pd = PAYLOAD_DIGITS/2;
+        leftSetpoint = parseValue((char*) payload, pd);
+        rightSetpoint = parseValue((char*) payload + pd, pd);
+        Serial.printf("New setpoints: (%d,%d) \n", leftSetpoint, rightSetpoint);
         watchdog = 0;
         break;
       }
@@ -126,31 +54,37 @@ int parseValue(char * ptr, int size) {
 void update_outputs() {
   watchdog++;
   if(watchdog >= MAX_WATCHDOG){ // If no input, stop rover
-    spL = 1023;
-    spR = 1023;
+    leftSetpoint = PWM_MAX;
+    rightSetpoint = PWM_MAX;
     watchdog = 0;
   }
 
   // Smooth acceleration
-  pwrL = (spL + INERT*pwrL) / (INERT+1);
-  pwrR = (spR + INERT*pwrR) / (INERT+1);
+  const int newLeftOutput = (leftSetpoint + INERT*leftOutput) / (INERT+1);
+  const int newRightOutput = (rightSetpoint + INERT*rightOutput) / (INERT+1);
 
 #ifdef PWM_OUTPUTS_ENABLED
   // Update outputs
-  if(pwrL >= 1023){
-    analogWrite(FL_PIN,pwrL-1023);
-    analogWrite(BL_PIN,0);
-  }else{
-    analogWrite(FL_PIN,0);
-    analogWrite(BL_PIN,1023-pwrL);
+  if(!areEqual(leftOutput, newLeftOutput)){
+    if(leftOutput >= PWM_MAX){
+      analogWrite(FL_PIN, leftOutput-PWM_MAX);
+      analogWrite(BL_PIN, 0);
+    }else{
+      analogWrite(FL_PIN, 0);
+      analogWrite(BL_PIN, PWM_MAX-leftOutput);
+    }
+    leftOutput = newLeftOutput;
   }
 
-  if(pwrR >= 1023){
-    analogWrite(FR_PIN,pwrR-1023);
-    analogWrite(BR_PIN,0);
-  }else{
-    analogWrite(FR_PIN,0);
-    analogWrite(BR_PIN,1023-pwrR);
+  if(!areEqual(rightOutput, newRightOutput)){
+    if(rightOutput >= PWM_MAX){
+      analogWrite(FR_PIN, rightOutput-PWM_MAX);
+      analogWrite(BR_PIN, 0);
+    }else{
+      analogWrite(FR_PIN, 0);
+      analogWrite(BR_PIN, PWM_MAX-rightOutput);
+    }
+    rightOutput = newRightOutput;
   }
 #endif
 
@@ -158,9 +92,9 @@ void update_outputs() {
     // Send comands as feedback
     if(wss_connected){
       char payload[9];
-      sprintf(payload, "%04d%04d", pwrL, pwrR);
+      sprintf(payload, "%04d%04d", leftOutput, rightOutput);
       webSocketSvr.sendTXT(client_num, payload); // Send values to client
-      Serial.printf("Sent values: (%d,%d) \n",pwrL, pwrR);
+      Serial.printf("Sent values: (%d,%d) \n",leftOutput, rightOutput);
     }
 #endif
 }
@@ -258,7 +192,7 @@ void setup() {
   while(!connected){
     WiFi.begin(ssid, password);
     WiFi.setSleep(false);
-    while (WiFi.status() != WL_CONNECTED && tries < 20) {
+    while (WiFi.status() != WL_CONNECTED && tries < WIFI_CONNECT_ATTEMPTS) {
       digitalWrite(LED_GPIO_NUM, LOW);
       delay(250);
       Serial.printf(".");
@@ -284,7 +218,7 @@ void setup() {
 #endif
 
 #if defined(CAM_ENABLED) && defined(WIFI_ENABLED)
-  int port; startCameraServer(port); // Get streaming port (should be 80)
+  int port; startCameraServer(CAM_PORT); // Get streaming port
   s->set_xclk(s, LEDC_TIMER_0, 40); // After boot, set 40MHz for clock freq
   Serial.printf("Camera stream URL: http://");
   Serial.printf("%d.%d.%d.%d:%d/stream \n", ip[0], ip[1], ip[2], ip[3], port); 

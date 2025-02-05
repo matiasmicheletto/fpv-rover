@@ -5,13 +5,13 @@ This project consists on a simple three-wheeled rover built using the [chassis k
 Basically, through a web based client application that you can run in your browser, you get a HUD on your screen with the rover's point of view, and by moving the cursor over the HUD, you send the control action to the rover via websocket commands. It is also available an option that uses a Tobii Eyetracker to control the rover.  
 
 ## System main components
-![Scheme](Img/GeneralSchemeWB.png)  
+![Scheme](img/GeneralSchemeWB.png)  
 
 ## The assembled rover
-![Assembling](Img/assembling/Assembling_6.jpg)  
+![Assembling](img/assembling/Assembling_6.jpg)  
 
 ## Screen capture of the client application (controlled with mouse)
-[![Demo](Img/screen-capture.gif)](https://www.youtube.com/watch?v=7270GWGmxQA)  
+[![Demo](img/screen-capture.gif)](https://www.youtube.com/watch?v=7270GWGmxQA)  
 
 ## Requirements
 
@@ -41,10 +41,10 @@ Basically, through a web based client application that you can run in your brows
 
 #### Version 2
   1. Configure the smartphone as hotspot using "EyeRobot" as SSID and "eyerobot123" as password:  
-  ![Android AP](Img/smartphone_ap_LR.jpg)
+  ![Android AP](img/smartphone_ap_LR.jpg)
   2. Turn on the rover.  
   3. Using the smartphone, verify that the rover has successfully conected and write down the IP address of the device:  
-  ![Foto](Img/smartphone_rover_ip_LR.jpg)
+  ![Foto](img/smartphone_rover_ip_LR.jpg)
   4. Run the IP camera app and write down the connection IP.  
   5. Attach the smartphone to the rover. It is also recommended a remote control app for the smartphone, so you can use it from the computer without removing it from the rover.  
   6. Connect your personal computer to the "EyeRobot" wifi network.  
