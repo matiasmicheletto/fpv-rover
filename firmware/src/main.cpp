@@ -1,4 +1,5 @@
 #include "config.h"
+#include "util.h"
 
 // Prototypes
 
@@ -42,7 +43,9 @@ int watchdog = 0; // Output updates counter
         const int pd = PAYLOAD_DIGITS/2;
         leftSetpoint = parseValue((char*) payload, pd);
         rightSetpoint = parseValue((char*) payload + pd, pd);
-        Serial.printf("New setpoints: (%d,%d) \n", leftSetpoint, rightSetpoint);
+        #ifdef RS232_DEBUG
+          Serial.printf("New setpoints: (%d,%d) \n", leftSetpoint, rightSetpoint);
+        #endif
         watchdog = 0;
         break;
       }
@@ -91,10 +94,13 @@ void update_outputs() {
 #ifdef WSS_ENABLED
     // Send comands as feedback
     if(wss_connected){
-      char payload[9];
-      sprintf(payload, "%04d%04d", leftOutput, rightOutput);
+      // Verify number of PAYLOAD_DIGITS (here is 6)
+      char payload[7];
+      sprintf(payload, "%03d%03d", leftOutput, rightOutput); 
       webSocketSvr.sendTXT(client_num, payload); // Send values to client
-      Serial.printf("Sent values: (%d,%d) \n",leftOutput, rightOutput);
+      #ifdef RS232_DEBUG
+        Serial.printf("Sent values: (%d,%d) \n",leftOutput, rightOutput);
+      #endif
     }
 #endif
 }
@@ -149,12 +155,15 @@ void setup() {
   config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 10000000;
-  config.frame_size = FRAMESIZE_QVGA;
+  //config.xclk_freq_hz = 10000000;
+  config.xclk_freq_hz = 20000000;
+  //config.frame_size = FRAMESIZE_QVGA;
+  config.frame_size = FRAMESIZE_VGA;
   config.pixel_format = PIXFORMAT_JPEG;
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 12;
+  //config.jpeg_quality = 12;
+  config.jpeg_quality = 8;
   config.fb_count = 1;
   config.grab_mode = CAMERA_GRAB_LATEST;
   if(psramFound()){
@@ -218,7 +227,8 @@ void setup() {
 #endif
 
 #if defined(CAM_ENABLED) && defined(WIFI_ENABLED)
-  int port; startCameraServer(CAM_PORT); // Get streaming port
+  int port = CAM_PORT;
+  startCameraServer(port); // Get streaming port
   s->set_xclk(s, LEDC_TIMER_0, 40); // After boot, set 40MHz for clock freq
   Serial.printf("Camera stream URL: http://");
   Serial.printf("%d.%d.%d.%d:%d/stream \n", ip[0], ip[1], ip[2], ip[3], port); 
@@ -232,5 +242,5 @@ void loop() {
     webSocketSvr.loop();
 #endif
   update_outputs();
-  delay(200);
+  delay(100);
 }

@@ -1,1 +1,2 @@
-servers/rover-server/credentials.h
+.vscode/
+firmware/src/credentials.h

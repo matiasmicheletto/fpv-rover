@@ -3,11 +3,11 @@ const mspv = maxSetpointValue*2;
 let socket = null;
 let lastMouseSampleTime = 0;
 const wssPort = 82; // Match WSS_PORT in firmware/src/config.h
-const camPort = 80; // Match CAM_PORT in firmware/src/config.h
+const camPort = 81; // Check from ESP32 CAM sr232 output
 
 
 const connectWSS = ip => { // Try to connect to the websocket server running on board
-    const socket = new WebSocket(`ws://${ip}:${wssPort}`, ['arduino']); 
+    socket = new WebSocket(`ws://${ip}:${wssPort}`, ['arduino']); 
     
     socket.onopen = () => {
         console.log("WSS connection stablished");
@@ -19,8 +19,8 @@ const connectWSS = ip => { // Try to connect to the websocket server running on 
 
     socket.onmessage = event => {
         console.log('WSS: Received from server: ', event.data);
-        const pwL = parseInt(event.data.slice(0,4));
-        const pwR = parseInt(event.data.slice(4,8));
+        const pwL = parseInt(event.data.slice(0,3));
+        const pwR = parseInt(event.data.slice(3,6));
         updatePwrSliders(pwL,pwR);
     };
 
@@ -51,7 +51,7 @@ const sendSetpoints = (left, right) => { // Send the setpoints to the rover
     if(socket){
         const msg = `${setpointLeft}${setpointRight}`;
         socket.send(msg);
-        console.log('Sent to server: ' + msg);
+        console.log(`Sent: left=${setpointLeft} right=${setpointRight} msg=${msg}`)
     }
 };
 
@@ -73,8 +73,6 @@ const mouseMoveEvent = event => { // Update the setpoints and sliders based on t
         updateKnob(x, y);
         updateSPSliders(setpointLeft, setpointRight);
         sendSetpoints(setpointLeft, setpointRight);
-        
-        
     }
 };
 

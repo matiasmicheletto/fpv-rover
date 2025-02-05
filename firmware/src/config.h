@@ -1,5 +1,6 @@
 // General config
 #define BAUDRATE 115200
+#define RS232_DEBUG 1 // Print setpoint and outputs
 #define INERT 6 // Acceleration inertia factor
 #define MAX_WATCHDOG 10 // Max. number of loops before all stop
 #define PWM_MAX 255 // Max. PWM value
@@ -16,10 +17,6 @@
 #ifdef WIFI_ENABLED
   #include <WiFi.h>
   #include "credentials.h"
-  /* content of credentials.h
-    const char* ssid = "YOUR_NETWORK_SSID";
-    const char* password = "YOUR_NETWORK_PASSWORD";
-  */
   #define WIFI_CONNECT_ATTEMPTS 20 // Max number of attempts to connect to WiFi
 #endif
 #ifdef CAM_ENABLED
