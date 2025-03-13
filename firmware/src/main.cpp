@@ -62,9 +62,9 @@ void update_outputs() {
     watchdog = 0;
   }
 
-  // Smooth acceleration
-  const int newLeftOutput = (leftSetpoint + INERT*leftOutput) / (INERT+1);
-  const int newRightOutput = (rightSetpoint + INERT*rightOutput) / (INERT+1);
+  // Exponential smoothing acceleration
+  const int newLeftOutput = (int) (INERT * (float) leftSetpoint + (1-INERT) * (float) leftOutput);
+  const int newRightOutput = (int) (INERT * (float) rightSetpoint + (1-INERT) * (float) rightOutput);
 
 #ifdef PWM_OUTPUTS_ENABLED
   // Update outputs

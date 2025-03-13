@@ -1,7 +1,7 @@
 // General config
 #define BAUDRATE 115200
 #define RS232_DEBUG 1 // Print setpoint and outputs
-#define INERT 6 // Acceleration inertia factor
+#define INERT 0.1 // Acceleration inertia factor
 #define MAX_WATCHDOG 10 // Max. number of loops before all stop
 #define PWM_MAX 255 // Max. PWM value
 #define PAYLOAD_DIGITS 6 // Number of digits in payload

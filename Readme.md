@@ -1,62 +1,34 @@
 # FPV Wi-Fi rover 
 
-This project consists on a simple three-wheeled rover built using the [chassis kit](https://www.amazon.com/perseids-Chassis-Encoder-Wheels-Battery/dp/B07DNYQ3PX/ref=sr_1_5?dchild=1&keywords=arduino+rover+robot&qid=1630333979&sr=8-5) and controlled through Wi-Fi network with a websocket server running on an ESP-32 microcontroller.  
+A three-wheeled rover built using a prototyping [chassis kit](https://www.amazon.com/perseids-Chassis-Encoder-Wheels-Battery/dp/B07DNYQ3PX) and the [ESP32-CAM](https://www.amazon.com/ESP32-CAM-MB-Aideepen-ESP32-CAM-Bluetooth-Arduino/dp/B0948ZFTQZ/ref=sr_1_2_sspa) board.  
 
-Basically, through a web based client application that you can run in your browser, you get a HUD on your screen with the rover's point of view, and by moving the cursor over the HUD, you send the control action to the rover via websocket commands. It is also available an option that uses a Tobii Eyetracker to control the rover.  
+By means of a HUD Display running in your browser, you can see the rover's point of view, and by moving the cursor over the screen, you can control the rover through WebSocket commands.  
 
-## System main components
-![Scheme](img/GeneralSchemeWB.png)  
-
-## The assembled rover
-![Assembling](img/assembling/Assembling_6.jpg)  
-
-## Screen capture of the client application (controlled with mouse)
+## Demo
 [![Demo](img/screen-capture.gif)](https://www.youtube.com/watch?v=7270GWGmxQA)  
 
 ## Requirements
 
-#### Version 1
   - ESP32-CAM.  
   - L298n Dual Full-Bridge.  
-  - Kit 3 wheeled robot.  
-  - Chrome web browser.  
-
-#### Version 2
-  - NodeMCU Amica v3.  
-  - L298n Dual Full-Bridge.  
-  - Kit 3 wheeled robot.  
-  - Tobii Eyetracker.  
-  - Android Smartphone with IP camera app. For example:  
-  https://play.google.com/store/apps/details?id=com.pas.webcam&hl=en  
-  - Chrome web browser.  
+  - Kit 3 wheeled robot: chassis, motors, wheels and battery sockets.  
+  - WiFi network (no internet needed).  
+  - Web browser with WebSocket API support.  
 
 ## Getting started
 
-#### Version 1
-  1. Configure SSID and password of your network in the ESP32-CAM code using the FTDI module.  
-  2. Turn on the rover.  
-  3. Run the client with the Chrome browser, in your PC.  
-  4. Put the corresponding IP addresses of the rover and the IP camera and push the "connect" buttons to stablish the websocket conection.  
-  5. That's it. Have fun!  
-
-#### Version 2
-  1. Configure the smartphone as hotspot using "EyeRobot" as SSID and "eyerobot123" as password:  
-  ![Android AP](img/smartphone_ap_LR.jpg)
-  2. Turn on the rover.  
-  3. Using the smartphone, verify that the rover has successfully conected and write down the IP address of the device:  
-  ![Foto](img/smartphone_rover_ip_LR.jpg)
-  4. Run the IP camera app and write down the connection IP.  
-  5. Attach the smartphone to the rover. It is also recommended a remote control app for the smartphone, so you can use it from the computer without removing it from the rover.  
-  6. Connect your personal computer to the "EyeRobot" wifi network.  
-  7. Run the client with the Chrome browser, in your PC.  
-  8. Put the corresponding IP addresses of the rover and the IP camera and push the "connect" buttons to stablish the websocket conection.  
-  9. That's it. Have fun!  
-
-## Tobii EyeX Web Socket Server
-
-The author of the Eyetracker Tobii Web Socket Server is Stevche Radevski:  
-https://github.com/sradevski/Tobii-EyeX-Web-Socket-Server  
-
+  1. Build the rover attaching motors to the chasis, L298n bridge, power supply and on-off switch. Use at least 9V as supply, and not higher than 12V. A set of seven 1.5V AA batteries will make the job.     
+  2. Create a ``credentials.h`` file in the [firmware/src/](firmware/src/) folder with your local WiFi SSID and password, for example:
+  ```cpp
+    const char* ssid = "MY_SSID";  
+    const char* password = "my_pass";  
+  ```
+  3. Compile and upload the firmware to the ESP32-CAM board using the corresponding programmer shield. You can use the Arduino IDE or any other platform of your choice.  
+  4. Use a serial monitor to see the IP address that your local network provided to the rover's ESP32-CAM board. After that, you can disconnect the board from the programmer shield.  
+  5. Connect the microcontroller to the bridge using the pin map configured in [firmware/src/config.h](firmware/src/config.h). Use the 5V output of the bridge as power supply for the microcontroller. Now, the harware configuration is done, and the rover should be ready to use.  
+  6. In your computer connected to the same WiFi network of the rover, setup a local server to serve the [client](client/index.html) web application. Open the app with your browser, depending on the server application, usually it is hosted with the URL: http://localhost:8080.   
+  7. Set the IP address of the rover in the input and hit the "connect" button. You should see the video captured by the rovers camera as the background of the screen. If that doesn't work, then check the [client/js/index.js](client/js/index.js) script to look for any mismatch between ports or IP configurations.  
+  8. That's it, control the rover by moving the cursor over the screen and have fun!  
 
 ## License
 
