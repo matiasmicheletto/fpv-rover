@@ -1,6 +1,7 @@
 #include "config.h"
 #include "util.h"
 
+
 // Prototypes
 
 #ifdef CAM_ENABLED
@@ -8,45 +9,63 @@
 #endif
 
 #ifdef WSS_ENABLED
-  WebSocketsServer webSocketSvr(WSS_PORT);
+  WebSocketsServer webSocketSvr(WSS_PORT);  
   uint8_t client_num; // Number of clients 
   bool wss_connected = false;
+  void webSocketEvent(uint8_t client, WStype_t type, uint8_t * payload, size_t length);
 #endif
 
 #ifdef DISPLAY_ENABLED
   LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS); 
 #endif
 
-// Global variables
-int leftSetpoint = PWM_MAX, rightSetpoint = PWM_MAX; // Left and right (0..255)
-int leftOutput = PWM_MAX, rightOutput = PWM_MAX; // Left and right outputs (0..255)
-int watchdog = 0; // Output updates counter
+void flashBlink();
+void update_outputs();
+
+
+// Ouput pwm values goes from 0 to PWM_MAX (255 for 8-bit PWM)
+// Setpoints and speed values go from -PWM_MAX to PWM_MAX (negative values for backward)
+// Client setpoints and feedback values are in the range 0 to 2*PWM_MAX
+int leftSetpoint = 0; // Left setpoint <- left motor speed sent by client
+int rightSetpoint = 0; // Right setpoint <- right motor speed sent by client
+int leftSpeed = 0; // Left motor speed 
+int rightSpeed = 0; // Right motor speed
+
+ // Output updating counter. Resets outputs if no input, so client must keep controlling rover
+int watchdog = 0;
+
+
+// Websocket server events callback
 
 #ifdef WSS_ENABLED
   void webSocketEvent(uint8_t client, WStype_t type, uint8_t * payload, size_t length) {
     switch(type) {
-      case WStype_CONNECTED: {
+      case WStype_CONNECTED: { // Client connected -> get IP and print it on serial port
         IPAddress ip = webSocketSvr.remoteIP(client);
         Serial.printf("[%u] WSS connection from IP: %d.%d.%d.%d\n", client, ip[0], ip[1], ip[2], ip[3]); 
         wss_connected = true;
         break;
       }
-      case WStype_DISCONNECTED:{
+      case WStype_DISCONNECTED:{ // Client disconnected, closed browser, not WiFi, etc.
         Serial.printf("[%u] WSS disconected!\n", client);
         wss_connected = false;
         break;
       }
-      case WStype_TEXT:{
+      case WStype_TEXT:{ // Client sent a message
         client_num = client;
-        // Payload must have 6 digit from 000 to 255
+        // Payload must have 6 digit from 000 to 2*PWM_MAX (510 for 8-bit PWM)
+        if(length != PAYLOAD_DIGITS){
+          Serial.printf("Invalid payload length: %d\n", length);
+          break;
+        }
         // Convert both values to integer and update setpoints
         const int pd = PAYLOAD_DIGITS/2;
-        leftSetpoint = parseValue((char*) payload, pd);
-        rightSetpoint = parseValue((char*) payload + pd, pd);
+        leftSetpoint = parseValue((char*) payload, pd) - PWM_MAX;
+        rightSetpoint = parseValue((char*) payload + pd, pd) - PWM_MAX;
         #ifdef RS232_DEBUG
           Serial.printf("New setpoints: (%d,%d) \n", leftSetpoint, rightSetpoint);
         #endif
-        watchdog = 0;
+        watchdog = 0; // Reset watchdog when updating setpoints
         break;
       }
     }
@@ -54,40 +73,52 @@ int watchdog = 0; // Output updates counter
 #endif
 
 
+void flashBlink(){ // Blink flash LED twice
+  analogWrite(FLASH_LED_NUM, PWM_MAX);
+  delay(100);
+  analogWrite(FLASH_LED_NUM, 0);
+  delay(100);
+  analogWrite(FLASH_LED_NUM, PWM_MAX);
+  delay(100);
+  analogWrite(FLASH_LED_NUM, 0);
+}
+
+
 void update_outputs() {
   watchdog++;
-  if(watchdog >= MAX_WATCHDOG){ // If no input, stop rover
-    leftSetpoint = PWM_MAX;
-    rightSetpoint = PWM_MAX;
+  if(watchdog >= MAX_WATCHDOG){ // If no input after a while, stop rover
+    leftSetpoint = 0;
+    rightSetpoint = 0;
     watchdog = 0;
+    flashBlink(); // Blink flash LED to indicate no input
   }
 
   // Exponential smoothing acceleration
-  const int newLeftOutput = (int) (INERT * (float) leftSetpoint + (1-INERT) * (float) leftOutput);
-  const int newRightOutput = (int) (INERT * (float) rightSetpoint + (1-INERT) * (float) rightOutput);
+  const int newLeftSpeed = (int) (INERT * (float) leftSetpoint + (1-INERT) * (float) leftSpeed);
+  const int newRightSpeed = (int) (INERT * (float) rightSetpoint + (1-INERT) * (float) rightSpeed);
 
 #ifdef PWM_OUTPUTS_ENABLED
   // Update outputs
-  if(!areEqual(leftOutput, newLeftOutput)){
-    if(leftOutput >= PWM_MAX){
-      analogWrite(FL_PIN, leftOutput-PWM_MAX);
+  if(!areEqual(leftSpeed, newLeftSpeed)){
+    leftSpeed = newLeftSpeed;
+    if(leftSpeed >= 0){ // Left motor forward
+      analogWrite(FL_PIN, leftSpeed);
       analogWrite(BL_PIN, 0);
-    }else{
+    }else{ // Left motor backward
       analogWrite(FL_PIN, 0);
-      analogWrite(BL_PIN, PWM_MAX-leftOutput);
+      analogWrite(BL_PIN, PWM_MAX + leftSpeed);
     }
-    leftOutput = newLeftOutput;
   }
 
-  if(!areEqual(rightOutput, newRightOutput)){
-    if(rightOutput >= PWM_MAX){
-      analogWrite(FR_PIN, rightOutput-PWM_MAX);
+  if(!areEqual(rightSpeed, newRightSpeed)){
+    rightSpeed = newRightSpeed;
+    if(rightSpeed >= 0){ // Right motor forward
+      analogWrite(FR_PIN, rightSpeed);
       analogWrite(BR_PIN, 0);
-    }else{
+    }else{ // Right motor backward
       analogWrite(FR_PIN, 0);
-      analogWrite(BR_PIN, PWM_MAX-rightOutput);
+      analogWrite(BR_PIN, PWM_MAX + rightSpeed);
     }
-    rightOutput = newRightOutput;
   }
 #endif
 
@@ -96,24 +127,17 @@ void update_outputs() {
     if(wss_connected){
       // Verify number of PAYLOAD_DIGITS (here is 6)
       char payload[7];
-      sprintf(payload, "%03d%03d", leftOutput, rightOutput); 
+      const int leftFeedback = leftSpeed + PWM_MAX;
+      const int rightFeedback = rightSpeed + PWM_MAX;
+      sprintf(payload, "%03d%03d", leftFeedback, rightFeedback); 
       webSocketSvr.sendTXT(client_num, payload); // Send values to client
       #ifdef RS232_DEBUG
-        Serial.printf("Sent values: (%d,%d) \n",leftOutput, rightOutput);
+        Serial.printf("Sent values: (%d,%d) \n", leftFeedback, rightFeedback);
       #endif
     }
 #endif
 }
 
-void readyBlink(){
-  analogWrite(FLASH_LED_NUM, 255);
-  delay(100);
-  analogWrite(FLASH_LED_NUM, 0);
-  delay(100);
-  analogWrite(FLASH_LED_NUM, 255);
-  delay(100);
-  analogWrite(FLASH_LED_NUM, 0);
-}
 
 void setup() {
   Serial.begin(BAUDRATE);
@@ -234,7 +258,7 @@ void setup() {
   Serial.printf("%d.%d.%d.%d:%d/stream \n", ip[0], ip[1], ip[2], ip[3], port); 
 #endif
 
-  readyBlink();
+  flashBlink();
 }
 
 void loop() {

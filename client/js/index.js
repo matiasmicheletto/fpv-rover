@@ -1,4 +1,4 @@
-const mspv = 255; // Max setpoint value
+const maxSetpoint = 2 * 255; // Max setpoint value = 2^8 - 1 (8 bits for analogWrite)
 let socket = null;
 let lastMouseSampleTime = 0;
 const wssPort = 82; // Match WSS_PORT in firmware/src/config.h
@@ -43,14 +43,25 @@ const connectToRover = form => { // Connect to the rover using the IP provided b
     readUrlAV(url);
 };
 
-const sendSetpoints = (left, right) => { // Send the setpoints to the rover
-    const padLength = mspv.toString().length;
-    const setpointLeft = padStart(left, padLength);
-    const setpointRight = padStart(right, padLength);
-    if(socket){
-        const msg = `${setpointLeft}${setpointRight}`;
-        socket.send(msg);
-        console.log(`Sent: left=${setpointLeft} right=${setpointRight} msg=${msg}`)
+const sendSetpoints = (left, right) => { // Send the setpoints to the rover. Values go from 0 to mspsv
+    const padLength = maxSetpoint.toString().length;
+    const spL = padStart(left, padLength);
+    const spR = padStart(right, padLength);
+    if(socket){ 
+        if(socket.readyState === 1 && 
+            spL >=0 && spR >=0 &&
+            spL <= maxSetpoint && spR <= maxSetpoint
+        ){
+            const msg = `${spL}${spR}`;
+            socket.send(msg);
+            console.log(`Sent: left=${spL} right=${spR} msg=${msg}`)
+        }else{
+            console.log("Error sending setpoints");
+            console.log(`Left: ${spL} Right: ${spR}`);
+            console.log(`ReadyState: ${socket.readyState}`);
+        }
+    }else{
+        console.log("Error sending setpoints. Socket not connected");
     }
 };
 
@@ -58,47 +69,45 @@ const mouseMoveEvent = event => { // Update the setpoints and sliders based on t
     if(Date.now() - lastMouseSampleTime > 100){
         lastMouseSampleTime = Date.now();
 
-        // x and y are values between 0 and mspv (should be 255)
-        const x = Math.floor(mspv * event.clientX / window.innerWidth);
-        const y = Math.floor(mspv * event.clientY / window.innerHeight);
-
-        const setpointLeft  = clamp((mspv / 2) + x - y, 0, mspv);
-        const setpointRight = clamp((mspv / 2) - x - y, 0, mspv);
-
-        const splPercentage = round(toPercentage(setpointLeft, 0, mspv)*2 - 100);
-        const sprPercentage = round(toPercentage(setpointRight, 0, mspv)*2 - 100);
+        // x and y are values between 0 and 2*maxSetpoint
+        const x = Math.floor(maxSetpoint * event.clientX / window.innerWidth);
+        const y = Math.floor(maxSetpoint * event.clientY / window.innerHeight);
+        const spL  = clamp(maxSetpoint / 2 + x - y, 0, maxSetpoint);
+        const spR = clamp(1.5 * maxSetpoint - x - y, 0, maxSetpoint);
+        const splPercentage = round(toPercentage(spL, 0, maxSetpoint)*2 - 100);
+        const sprPercentage = round(toPercentage(spR, 0, maxSetpoint)*2 - 100);
 
         document.getElementById('mousepos').innerHTML = `Setpoints: ${splPercentage}% , ${sprPercentage}%`;
 
-        console.log(`Mouse: x=${x} y=${y} spl=${setpointLeft} spr=${setpointRight}`);
-
         updateKnob(x, y);
-        updateSPSliders(setpointLeft, setpointRight);
-        sendSetpoints(setpointLeft, setpointRight);
+        updateSPSliders(spL, spR);
+        sendSetpoints(spL, spR);
     }
 };
 
 // Update the knob based on the mouse position
 const updateKnob = (x, y) => { 
-    const t = Math.atan2(-(x - mspv), (y - mspv)) / Math.PI * 50 + 50;
+    const num = maxSetpoint/2 - x
+    const den = y - maxSetpoint/2;
+    const t = Math.atan2(num, den) / Math.PI * 50 + 50;
     $('.knob').val(t).trigger('change');
 };
 
 // Update the sliders based on the setpoints
-const updatePwrSliders = (pwL, pwR) => { 
-    document.getElementById("pwLB").value = (mspv - pwL) / mspv * 100;
-    document.getElementById("pwLF").value = (pwL) / mspv * 100;
+const updatePwrSliders = (pwL, pwR) => { // Setpoint sliders
+    document.getElementById("pwLB").value = (maxSetpoint - pwL) / maxSetpoint * 100;
+    document.getElementById("pwLF").value = (pwL) / maxSetpoint * 100;
 
-    document.getElementById("pwRB").value = (mspv - pwR) / mspv * 100;
-    document.getElementById("pwRF").value = (pwR) / mspv * 100;
+    document.getElementById("pwRB").value = (maxSetpoint - pwR) / maxSetpoint * 100;
+    document.getElementById("pwRF").value = (pwR) / maxSetpoint * 100;
 };
 
-const updateSPSliders = (spL, spR) => { 
-    document.getElementById("spLB").value = (mspv - spL) / mspv * 100;
-    document.getElementById("spLF").value = (spL) / mspv * 100;
+const updateSPSliders = (spL, spR) => { // Feedback sliders
+    document.getElementById("spLB").value = (maxSetpoint - spL) / maxSetpoint * 100;
+    document.getElementById("spLF").value = (spL) / maxSetpoint * 100;
 
-    document.getElementById("spRB").value = (mspv - spR) / mspv * 100;
-    document.getElementById("spRF").value = (spR) / mspv * 100;
+    document.getElementById("spRB").value = (maxSetpoint - spR) / maxSetpoint * 100;
+    document.getElementById("spRF").value = (spR) / maxSetpoint * 100;
 };
 
 

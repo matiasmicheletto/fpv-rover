@@ -3,9 +3,9 @@
 #define RS232_DEBUG 1 // Print setpoint and outputs
 #define INERT 0.1 // Acceleration inertia factor
 #define MAX_WATCHDOG 10 // Max. number of loops before all stop
-#define PWM_MAX 255 // Max. PWM value
 #define PAYLOAD_DIGITS 6 // Number of digits in payload
 #define INT_EPS 1 // Epsilon for integer comparison
+#define PWM_MAX 255 // Max. PWM value (8 bits)
 
 // Libs isolation
 #define WIFI_ENABLED 1

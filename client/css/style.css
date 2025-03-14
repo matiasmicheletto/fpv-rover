@@ -45,8 +45,8 @@
 .panel{
     opacity: 0.9;
     top: 50%;
-    left: 0%;
-    transform: rotate(-90deg) translate(20%, -60%);
+    left: -3%;
+    transform: rotate(-90deg) translate(20%, -40%);
     position: absolute;
     z-index: 10;
 }
