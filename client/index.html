@@ -27,7 +27,11 @@
         value="Connect" 
         onClick="connectToRover(this.form)">
     </form>
-    <p style="margin-left: 20px;" id='mousepos'></p>
+    <p>Connection status: <a id="socketStatus"></a></p>
+    <div id="motorSPs">
+      <p id="leftSpeed"></p>
+      <p id="rightSpeed"></p>
+    </div>
   </div>
 
   <div class="panel">
@@ -43,11 +47,11 @@
     <div>
       Feedback
     </div>
-    <progress class="inverted" id="pwLB" value="0" max="100" min="0"></progress>
-    <progress id="pwLF" value="0" max="100" min="0"></progress>  L
+    <progress class="inverted" id="fbLB" value="0" max="100" min="0"></progress>
+    <progress id="fbLF" value="0" max="100" min="0"></progress>  L
     <br>
-    <progress class="inverted" id="pwRB" value="0" max="100" min="0"></progress>
-    <progress id="pwRF" value="0" max="100" min="0"></progress>  R
+    <progress class="inverted" id="fbRB" value="0" max="100" min="0"></progress>
+    <progress id="fbRF" value="0" max="100" min="0"></progress>  R
   </div>
 
   <div class="controls">    

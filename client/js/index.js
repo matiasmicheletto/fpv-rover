@@ -1,8 +1,18 @@
 const maxSetpoint = 2 * 255; // Max setpoint value = 2^8 - 1 (8 bits for analogWrite)
-let socket = null;
-let lastMouseSampleTime = 0;
+const halfMaxSetpoint = maxSetpoint / 2; // Half of the max setpoint value, used for update sliders
+const percHalfMaxSP = halfMaxSetpoint / 100;
+let lastMouseSampleTime = 0; // Limit the number the mouse move event is executed
+
+let socket = null; // Websocket connection to the rover
 const wssPort = 82; // Match WSS_PORT in firmware/src/config.h
 const camPort = 81; // Check from ESP32 CAM sr232 output
+
+const ssEl = document.getElementById("socketStatus");
+ssEl.innerHTML = "Disconnected";
+ssEl.style.color = "red";
+
+const motorSPs = document.getElementById("motorSPs");
+motorSPs.style.display = "none";
 
 
 const connectWSS = ip => { // Try to connect to the websocket server running on board
@@ -10,17 +20,23 @@ const connectWSS = ip => { // Try to connect to the websocket server running on 
     
     socket.onopen = () => {
         console.log("WSS connection stablished");
+        ssEl.innerHTML = "Connected";
+        ssEl.style.color = "green";
+        motorSPs.style.display = "block";
     };
 
     socket.onclose = () => {
         console.log("WSS connection closed");
+        ssEl.innerHTML = "Disconnected";
+        ssEl.style.color = "red";
+        motorSPs.style.display = "none";
     };
 
     socket.onmessage = event => {
         console.log('WSS: Received from server: ', event.data);
-        const pwL = parseInt(event.data.slice(0,3));
-        const pwR = parseInt(event.data.slice(3,6));
-        updatePwrSliders(pwL,pwR);
+        const fbL = parseInt(event.data.slice(0,3));
+        const fbR = parseInt(event.data.slice(3,6));
+        updateFBSliders(fbL,fbR);
     };
 
     socket.onerror = error => {
@@ -47,6 +63,7 @@ const sendSetpoints = (left, right) => { // Send the setpoints to the rover. Val
     const padLength = maxSetpoint.toString().length;
     const spL = padStart(left, padLength);
     const spR = padStart(right, padLength);
+    console.log(`Sending setpoints: ${spL} ${spR}`);
     if(socket){ 
         if(socket.readyState === 1 && 
             spL >=0 && spR >=0 &&
@@ -74,10 +91,11 @@ const mouseMoveEvent = event => { // Update the setpoints and sliders based on t
         const y = Math.floor(maxSetpoint * event.clientY / window.innerHeight);
         const spL  = clamp(maxSetpoint / 2 + x - y, 0, maxSetpoint);
         const spR = clamp(1.5 * maxSetpoint - x - y, 0, maxSetpoint);
-        const splPercentage = round(toPercentage(spL, 0, maxSetpoint)*2 - 100);
-        const sprPercentage = round(toPercentage(spR, 0, maxSetpoint)*2 - 100);
+        const splPercentage = round(toPercentage(spL, 0, maxSetpoint) * 2 - 100);
+        const sprPercentage = round(toPercentage(spR, 0, maxSetpoint) * 2 - 100);
 
-        document.getElementById('mousepos').innerHTML = `Setpoints: ${splPercentage}% , ${sprPercentage}%`;
+        document.getElementById('leftSpeed').innerHTML  = `Left speed setpoint: ${splPercentage}%`;
+        document.getElementById('rightSpeed').innerHTML = `Right speed setpoint: ${sprPercentage}%`;
 
         updateKnob(x, y);
         updateSPSliders(spL, spR);
@@ -93,23 +111,22 @@ const updateKnob = (x, y) => {
     $('.knob').val(t).trigger('change');
 };
 
-// Update the sliders based on the setpoints
-const updatePwrSliders = (pwL, pwR) => { // Setpoint sliders
-    document.getElementById("pwLB").value = (maxSetpoint - pwL) / maxSetpoint * 100;
-    document.getElementById("pwLF").value = (pwL) / maxSetpoint * 100;
+// Update the sliders based on the setpoints and feedback
+const updateSPSliders = (spL, spR) => { // Setpoint sliders
+    document.getElementById("spLB").value = (halfMaxSetpoint - spL) / percHalfMaxSP;
+    document.getElementById("spLF").value = (spL - halfMaxSetpoint) / percHalfMaxSP;
 
-    document.getElementById("pwRB").value = (maxSetpoint - pwR) / maxSetpoint * 100;
-    document.getElementById("pwRF").value = (pwR) / maxSetpoint * 100;
+    document.getElementById("spRB").value = (halfMaxSetpoint - spR) / percHalfMaxSP;
+    document.getElementById("spRF").value = (spR - halfMaxSetpoint) / percHalfMaxSP;
 };
 
-const updateSPSliders = (spL, spR) => { // Feedback sliders
-    document.getElementById("spLB").value = (maxSetpoint - spL) / maxSetpoint * 100;
-    document.getElementById("spLF").value = (spL) / maxSetpoint * 100;
+const updateFBSliders = (fbL, fbR) => { // Feedback sliders
+    document.getElementById("fbLB").value = (halfMaxSetpoint - fbL) / percHalfMaxSP;
+    document.getElementById("fbLF").value = (fbL - halfMaxSetpoint) / percHalfMaxSP;
 
-    document.getElementById("spRB").value = (maxSetpoint - spR) / maxSetpoint * 100;
-    document.getElementById("spRF").value = (spR) / maxSetpoint * 100;
+    document.getElementById("fbRB").value = (halfMaxSetpoint - fbR) / percHalfMaxSP;
+    document.getElementById("fbRF").value = (fbR - halfMaxSetpoint) / percHalfMaxSP;
 };
-
 
 // Load IP from local storage
 const storedIP = localStorage.getItem('roverIP');

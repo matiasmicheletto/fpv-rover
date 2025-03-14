@@ -1,5 +1,5 @@
-const padStart = (number, length) => {
-    let str = '' + number;
+const padStart = (number, length) => { // Only works for positive numbers
+    let str = '' + number; // Convert to string
     while (str.length < length) str = '0' + str;
     return str;
 };

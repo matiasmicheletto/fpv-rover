@@ -75,3 +75,7 @@ progress::-webkit-progress-value {
     border-radius: 100px;
     background: linear-gradient(to right, rgba(29, 32, 206, 0.6), rgba(177, 33, 33, 1));
 }
+p {
+    margin-left: 20px;
+    line-height: 0.5em;
+}
