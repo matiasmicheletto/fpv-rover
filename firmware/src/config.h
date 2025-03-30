@@ -3,11 +3,10 @@
 #define RS232_DEBUG 1 // Print debug messages
 #define INERT 0.1 // Acceleration inertia factor
 #define MAX_WATCHDOG 10 // Max. number of loops before all stop
-#define PAYLOAD_DIGITS 6 // Number of digits in payload
 #define INT_EPS 1 // Epsilon for integer comparison
 #define PWM_MAX 255 // Max. PWM value (8 bits)
 
-#define WIFI_CONNECT_ATTEMPTS 20 // Max number of attempts to connect to WiFi
+#define WIFI_CONNECT_ATTEMPTS 50 // Max number of attempts to connect to WiFi
 
 // Server ports
 // Make sure to change the ports in the client's code
