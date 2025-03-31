@@ -1,10 +1,11 @@
 // Misc
 #define BAUDRATE 115200 // Serial communication speed
 #define RS232_DEBUG 1 // Print debug messages
-#define INERT 0.1 // Acceleration inertia factor
+#define INERT 0.3 // Acceleration inertia factor
 #define MAX_WATCHDOG 10 // Max. number of loops before all stop
 #define INT_EPS 1 // Epsilon for integer comparison
 #define PWM_MAX 255 // Max. PWM value (8 bits)
+#define CLAMP_THRES 100 // Clamp threshold for motor pwm outputs
 
 #define WIFI_CONNECT_ATTEMPTS 50 // Max number of attempts to connect to WiFi
 

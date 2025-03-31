@@ -45,8 +45,8 @@ volatile uint32_t flash_blink_period = 25; // default period is 250ms
 
 /* Timer interrupt variables
  * The real-time operating system consists on 4 tasks: 
-    - 0: Web socket server loop: 20ms (2 slots), 
-    - 1: Motor control outputs update: 50ms (5 slots)
+    - 0: Web socket server loop: 10ms (1 slot), 
+    - 1: Motor control outputs update: 20ms (2 slots)
     - 2: Feedback update: 100ms (10 slots)
     - 3: Flash led blinking period: 250ms (25 slots) by default, but configurable
 */
@@ -62,6 +62,16 @@ int parse_value(char * ptr, int size) { // Convert char array to integer
     value = value * 10 + (ptr[i] - '0'); 
   }
   return value;
+}
+
+
+int clamp_motor_speed(int speed) { // Clamp low speeds to prevent motor stalling
+  return speed < CLAMP_THRES ? 0 : speed;
+}
+
+
+int get_speed(int setpoint, int speed) { // Exponential smoothing acceleration
+  return (int) (INERT * (float) setpoint + (1-INERT) * (float) speed);
 }
 
 
@@ -137,6 +147,7 @@ void update_flash() { // Update flash LED state
   }
 }
 
+
 void critical_error() { // Idle mode
   left_setpoint = 0;
   right_setpoint = 0;
@@ -150,40 +161,39 @@ void critical_error() { // Idle mode
 
 void update_motors_speed() {
 
+  watchdog++;
+
   // If no input after a set of loops, stop motors
   // Watchdog is reset when new setpoints are received
   if(watchdog >= MAX_WATCHDOG){ 
-    DEBUG_PRINTF("Watchdog timeout, stopping motors\n");
     left_setpoint = 0;
     right_setpoint = 0;
-    if(left_speed == 0 && right_speed == 0){ // If motors are stopped, blink flash LED
-      DEBUG_PRINTF("Rover halt.\n");
+    if(left_speed != 0 || right_speed != 0){ // While halting, blink flash LED
+      DEBUG_PRINTF("Watchdog timeout, halting rover\n. Current speed: (%d,%d)\n", left_speed, right_speed);
       flash_blink();
     }
     watchdog = MAX_WATCHDOG; // Prevents watchdog overflow
   }
-  
-  watchdog++;
 
-  // Exponential smoothing acceleration
-  left_speed = (int) (INERT * (float) left_setpoint + (1-INERT) * (float) left_speed);
-  right_speed = (int) (INERT * (float) right_setpoint + (1-INERT) * (float) right_speed);
+  // Compute motor speeds (PWM value)
+  left_speed = get_speed(left_setpoint, left_speed);
+  right_speed = get_speed(right_setpoint, right_speed);
 
   // Update outputs
   if(left_speed >= 0){ // Left motor forward
-    analogWrite(FL_PIN, left_speed);
+    analogWrite(FL_PIN, clamp_motor_speed(left_speed));
     analogWrite(BL_PIN, 0);
   }else{ // Left motor backward
     analogWrite(FL_PIN, 0);
-    analogWrite(BL_PIN, PWM_MAX + left_speed);
+    analogWrite(BL_PIN, clamp_motor_speed(PWM_MAX + left_speed));
   }
 
   if(right_speed >= 0){ // Right motor forward
-    analogWrite(FR_PIN, right_speed);
+    analogWrite(FR_PIN, clamp_motor_speed(right_speed));
     analogWrite(BR_PIN, 0);
   }else{ // Right motor backward
     analogWrite(FR_PIN, 0);
-    analogWrite(BR_PIN, PWM_MAX + right_speed);
+    analogWrite(BR_PIN, clamp_motor_speed(PWM_MAX + right_speed));
   }
 }
 
@@ -235,13 +245,13 @@ void setup() {
   config.pin_reset = RESET_GPIO_NUM;
   //config.xclk_freq_hz = 10000000;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_QVGA;
-  //config.frame_size = FRAMESIZE_VGA;
+  //config.frame_size = FRAMESIZE_QVGA;
+  config.frame_size = FRAMESIZE_VGA;
   config.pixel_format = PIXFORMAT_JPEG;
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 12;
-  //config.jpeg_quality = 8;
+  //config.jpeg_quality = 12;
+  config.jpeg_quality = 8;
   config.fb_count = 1;
   config.grab_mode = CAMERA_GRAB_LATEST;
   if(psramFound()){
@@ -324,12 +334,12 @@ void loop() {
 
   // Time slot is 10ms
 
-  if(timerticks[0] >= 2){ // 20ms
+  if(timerticks[0] >= 1){ // 10ms
     web_socker_server.loop();
     timerticks[0] = 0;
   }
 
-  if(timerticks[1] >= 5){ // 50ms
+  if(timerticks[1] >= 2){ // 20ms
     update_motors_speed();  
     timerticks[1] = 0;
   }
